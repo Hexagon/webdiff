@@ -9,17 +9,17 @@ const defaultOutputDirectory = "./output";
 
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
-  boolean: ["debug"],
-  default: { 
-    delay: defaultDelayMs,
-  },
+  boolean: ["verbose"],
+  string: ["output"],
   alias: {
     d: "delay", 
+    o: "output",
+    v: "verbose"
   }
 });
 
 const delayMs = args.delay ?? defaultDelayMs;
-const debug = args.debug ?? false;
+const debug = args.verbose ?? false;
 const outputDirectory = args.output ?? defaultOutputDirectory;
 
 // Get targets from the remainder (non-option arguments)
