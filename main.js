@@ -1,12 +1,56 @@
-import { pageQueue } from "./queue.js";
-import { Page } from "./page.js";
+import { assetQueue } from "./queue.js";
+import { Asset } from "./asset.js";
 import { delay } from "./utils.js";
 import { Debug } from "./debug.js";
+import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
 
-const delayMs = 100;
-const debug = true;
-const target = "https://hexagon.56k.guru";
-const outputDirectory = "./output";
+const defaultDelayMs = 100;
+const defaultOutputDirectory = "./output";
+
+// Parse command line arguments
+const args = parseArgs(Deno.args, {
+  boolean: ["debug"],
+  default: { 
+    delay: defaultDelayMs,
+  },
+  alias: {
+    d: "delay", 
+  }
+});
+
+const delayMs = args.delay ?? defaultDelayMs;
+const debug = args.debug ?? false;
+const outputDirectory = args.output ?? defaultOutputDirectory;
+
+// Get targets from the remainder (non-option arguments)
+const targetUrls = args._; 
+
+if (targetUrls.length === 0) {
+  console.error("Error: At least one target URL is required.");
+  Deno.exit(1); 
+}
+
+// Input Validation
+targetUrls.forEach((targetUrl) => { 
+  try {
+    new URL(targetUrl); // Validate each URL individually
+  } catch (error) {
+    console.error(`Error: Invalid target URL: ${targetUrl}`);
+    Deno.exit(1);
+  }
+  assetQueue.enqueue(targetUrl);
+});
+
+// Input Validation
+if (!targetUrls.length) {
+  console.error("Error: Target URL is required. Please use --target <url>");
+  Deno.exit(1); 
+}
+
+if (delayMs <= 0) {
+  console.error("Error: Delay must be a positive number.");
+  Deno.exit(1);
+}
 
 // Enable debugging if requested
 if (debug) {
@@ -15,29 +59,28 @@ if (debug) {
 
 Debug.log("Debugging is on!");
 
-pageQueue.enqueue(target);
-
 async function processQueue() {
-  while (pageQueue.queue.length > 0) {
-    const url = pageQueue.dequeue();
-    const page = new Page(url, outputDirectory);
+  while (assetQueue.queue.length > 0) {
+    const url = assetQueue.dequeue();
+    const asset = new Asset(url, outputDirectory);
 
     try {
-      await page.fetchAndParse();
+      await asset.fetch();
+      await asset.parse();
       // Find, filter, and enqueue new links
-      page.links.forEach((link) => {
+      asset.references.forEach((link) => {
         if (link) { // Ensure the link has an href attribute
           try {
-            const resolvedUrl = new URL(link, url); // Resolve against the current page
+            const resolvedUrl = new URL(link, url); // Resolve against the current asset
             if (shouldEnqueue(resolvedUrl)) { // Apply your filtering logic
-              pageQueue.enqueue(resolvedUrl.toString());
+              assetQueue.enqueue(resolvedUrl.toString());
             }
           } catch (error) {
             Debug.log("Error processing link:", link, error);
           }
         }
       });
-      await page.save(outputDirectory); // Save the page
+      await asset.save(outputDirectory); // Save the asset
     } catch (error) {
       console.error(error);
     } finally {
@@ -46,9 +89,9 @@ async function processQueue() {
 
     Debug.log(
       "Queue Status: Length:",
-      pageQueue.queue.length,
+      assetQueue.queue.length,
       " Next:",
-      pageQueue.queue[0],
+      assetQueue.queue[0],
     );
   }
 }
@@ -57,8 +100,12 @@ function shouldEnqueue(url) {
   // 2. Remove anchor information
   url.hash = ""; // Reset the hash (anchor) part
 
-  // 3. Additional filtering (your existing logic)
-  if (url.hostname === new URL(target).hostname) {
+  // Check if the URL's hostname matches any of the target hostnames
+  const isFromTargetSite = targetUrls.some((targetUrl) => {
+    return url.hostname === new URL(targetUrl).hostname;
+  });
+
+  if (isFromTargetSite) {
     return url.toString();
   } else {
     return undefined;

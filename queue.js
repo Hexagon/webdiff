@@ -1,4 +1,4 @@
-export const pageQueue = {
+export const assetQueue = {
   urls: new Set(), // Using a Set to ensure unique URLs
   queue: [],
 
