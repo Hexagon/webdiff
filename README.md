@@ -1,16 +1,17 @@
-# Hexagon's webdiff 
+# Hexagon's webdiff
 
 A Deno-based tool to recursively fetch and analyze web assets, focused on identifying changes or differences (hence the tentative name "webdiff").
 
 **Features**
 
 * **Recursive Fetching:** Starting from one or more seed URLs, the tool fetches the web page(s) and parses them to discover links to other assets (images, stylesheets, scripts).
-* **Resource Discovery:**  Follows internal links within a target website (or websites) to discover and download connected assets.
+* **Resource Discovery:** Follows internal links within a target website (or websites) to discover and download connected assets.
 * **Basic Analysis:** Currently focuses on:
-    * Extracting text content from HTML
-    * Detecting images
-    * Finding links within the fetched assets 
+   - Extracting text content from HTML
+   - Detecting images
+   - Finding links within the fetched assets
 * **Sitemap and robots.txt Parsing:** Can parse `sitemap.xml` and `robots.txt` to assist in the discovery of assets.
+* **Report Generation:** Creates analyzed reports for understanding differences between fetched assets. 
 
 ## Prerequisites
 
@@ -20,7 +21,7 @@ A Deno-based tool to recursively fetch and analyze web assets, focused on identi
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/hexagon/webdiff 
+   git clone https://github.com/hexagon/webdiff
    ```
 
 2. **Change directory:**
@@ -30,25 +31,23 @@ A Deno-based tool to recursively fetch and analyze web assets, focused on identi
 
 3. **Run the script:**
    ```bash
-   deno run main.ts <target_url_1> <target_url_2> ... 
+   deno run main.ts <target_url> --report <filename> --report-only 
    ```
    * Replace `<target_url_1>`, `<target_url_2>` with the actual websites you want to analyze.
    * **Options:**
-     * `--delay <milliseconds>`  Set a delay between fetches (default: 100ms)
-     * `--output <directory>`  Specify the output directory (default: "./output")
-     * `--verbose`   Enable verbose debugging output
+     * `--delay <milliseconds>` Set a delay between fetches (default: 100ms)
+     * `--output <directory>` Specify the output directory (default: "./output")
+     * `--verbose` Enable verbose debugging output
+     * `--report <filename>` Filename for the generated report (default: "./output/report.json")
+     * `--report-only` Generates the report without storing the assets. 
 
 ## Example
 
 ```bash
-deno run -A main.js --output ./my_data --delay 500 https://56k.guru 
+deno run -A main.js --output ./my_data --delay 500 https://56k.guru
 ```
 
-**Output**
-
-* Assets will be downloaded into the specified output directory. 
-* You might need additional scripts or tools to compare the downloaded assets and highlight differences.
-
+This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created.
 
 **Comparing Fetched Versions**
 
@@ -68,12 +67,6 @@ The diff command will output differences it finds between files in the two direc
 * For text files (HTML, CSS, etc.), it will show line-by-line changes.
 * For binary files (images, etc.), it will simply indicate that the files differ.
 
-## Future Development
-
-* Implement difference detection mechanisms (e.g., comparing text content, image hashes).
-* Provide options for more structured reporting on differences.
-* Improve filtering and customization of which assets are fetched.
-
 ## Contributions
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
@@ -82,4 +75,4 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 This tool is in an early development stage. Use it at your own risk, and always respect the `robots.txt` rules of websites you target.
 
-Let me know if you'd like to add more sections to the README (e.g., specific use-cases, a more detailed explanation of the code, or planned features)! 
+**Let me know if you want me to expand on any particular section or concept!** 

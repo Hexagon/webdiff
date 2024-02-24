@@ -3,35 +3,40 @@ import { Asset } from "./asset.js";
 import { delay } from "./utils.js";
 import { Debug } from "./debug.js";
 import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
+import { Summary } from "./summary.js";
+import { exists } from 'https://deno.land/std@0.217.0/fs/mod.ts';
 
 const defaultDelayMs = 100;
-const defaultOutputDirectory = "./output";
+const defaultOutputDirectory = "output";
+const defaultReportFilename = "report.json";
 
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
-  boolean: ["verbose"],
-  string: ["output"],
+  boolean: ["verbose","report-only"],
+  string: ["output", "report"],
   alias: {
-    d: "delay", 
+    d: "delay",
     o: "output",
-    v: "verbose"
-  }
+    v: "verbose",
+    r: "report",
+  },
 });
 
 const delayMs = args.delay ?? defaultDelayMs;
 const debug = args.verbose ?? false;
 const outputDirectory = args.output ?? defaultOutputDirectory;
+const reportFilename = args.report ?? defaultReportFilename;
 
 // Get targets from the remainder (non-option arguments)
-const targetUrls = args._; 
+const targetUrls = args._;
 
 if (targetUrls.length === 0) {
   console.error("Error: At least one target URL is required.");
-  Deno.exit(1); 
+  Deno.exit(1);
 }
 
 // Input Validation
-targetUrls.forEach((targetUrl) => { 
+targetUrls.forEach((targetUrl) => {
   try {
     new URL(targetUrl); // Validate each URL individually
   } catch (error) {
@@ -44,7 +49,7 @@ targetUrls.forEach((targetUrl) => {
 // Input Validation
 if (!targetUrls.length) {
   console.error("Error: Target URL is required. Please use --target <url>");
-  Deno.exit(1); 
+  Deno.exit(1);
 }
 
 if (delayMs <= 0) {
@@ -57,7 +62,24 @@ if (debug) {
   Debug.enable();
 }
 
+// Check if the output directory exists
+try {
+  const result = await exists(outputDirectory);
+  if (result) {
+    console.error(`Output directory '${outputDirectory}' already exists.`);
+    Deno.exit(1);
+  }
+} catch (error) {
+  if (error.code !== 'ENOENT') {
+    // Unexpected error
+    console.error('Error checking output directory:', error);
+    Deno.exit(1);
+  }
+}
+
 Debug.log("Debugging is on!");
+
+const summary = new Summary(); // Create a summary object
 
 async function processQueue() {
   while (assetQueue.queue.length > 0) {
@@ -80,7 +102,8 @@ async function processQueue() {
           }
         }
       });
-      await asset.save(outputDirectory); // Save the asset
+      if (!args["report-only"]) await asset.save(outputDirectory); // Save the asset
+      summary.addAssetData(asset); // Add asset data to the summary
     } catch (error) {
       console.error(error);
     } finally {
@@ -112,4 +135,9 @@ function shouldEnqueue(url) {
   }
 }
 
-processQueue();
+await processQueue();
+
+await summary.generateReport(
+  outputDirectory,
+  reportFilename,
+);
