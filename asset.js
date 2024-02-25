@@ -139,25 +139,38 @@ export class Asset {
     }
   }
 
+  addReference(refUrl) {
+    // Ensure refUrl and this.url exist before proceeding
+    if (!refUrl || !this.url) {
+      return; // Or you could throw an error here
+    }
+  
+    // Create a URL object for robust parsing and handling
+    const absoluteUrl = new URL(refUrl, this.url);
+  
+    // Add the resolved absolute URL to the references
+    this.references.add(absoluteUrl.href);
+  }
+  
   extractHtmlAssets(document) {
     Debug.log("Extracting assets from: " + this.url);
 
     // Find scripts
     Array.from(document.querySelectorAll("script")).forEach((script) => {
       const src = this.getNamedAsset(script, "src");
-      if (src) this.references.add(src);
+      if (src) this.addReference(src);
     });
 
     // Find images
     Array.from(document.querySelectorAll("img")).forEach((img) => {
       const src = this.getNamedAsset(img, "src");
-      if (src) this.references.add(src);
+      if (src) this.addReference(src);
     });
 
     // Find links
     Array.from(document.querySelectorAll("a")).forEach((link) => {
       const href = this.getNamedAsset(link, "href");
-      if (href) this.references.add(href);
+      if (href) this.addReference(href);
     });
 
     Debug.log(
@@ -191,7 +204,7 @@ export class Asset {
     let match = undefined;
     while ((match = allowRegex.exec(robotsContent)) !== null) {
       const allowedUrl = match[1];
-      this.references.add(allowedUrl);
+      this.addReference(allowedUrl);
     }
 
     // Sitemap Extraction
@@ -199,7 +212,7 @@ export class Asset {
     let matchSitemap;
     while ((matchSitemap = sitemapRegex.exec(robotsContent)) !== null) {
       const sitemapUrl = matchSitemap[1];
-      this.references.add(sitemapUrl);
+      this.addReference(sitemapUrl);
     }
   }
 
@@ -213,7 +226,7 @@ export class Asset {
       if (parsedSitemap.urlset && parsedSitemap.urlset.url) {
         parsedSitemap.urlset.url.forEach((urlEntry) => {
           if (urlEntry.loc) {
-            this.references.add(urlEntry.loc);
+            this.addReference(urlEntry.loc);
           }
         });
       }
@@ -227,25 +240,30 @@ export class Asset {
     return attribute ? attribute.value : null;
   }
 
-  createLocalPath(url, outputDirectory) {
+  createLocalPath(url) {
     const urlPath = new URL(url).pathname;
-    let relativePath = join(outputDirectory, "assets", urlPath); // Use path.join for consistency
+    let relativePath = join("assets", urlPath); // Use path.join for consistency
     relativePath = relativePath.replace(/^\//, "");
 
     // Only append .html in specific cases
-    if (extname(relativePath) === "" || relativePath.endsWith("/")) {
-      relativePath += "index.html";
+    const defaultIndexName = "index.html";
+    if (extname(relativePath) === "" && !relativePath.endsWith("/")) {
+      relativePath += "/";
+      relativePath += defaultIndexName;
+    } else if (relativePath.endsWith("/")) {
+      relativePath += defaultIndexName;
     }
 
     return relativePath;
   }
 
-  async save() {
+  async save(outputDirectory) {
+    const fullLocalPath = join(outputDirectory, this.localPath);
     if (this.ok) {
-      const dirPath = dirname(this.localPath);
+      const dirPath = dirname(fullLocalPath);
       try {
         await Deno.mkdir(dirPath, { recursive: true });
-        await Deno.writeFile(this.localPath, new Uint8Array(this.data));
+        await Deno.writeFile(fullLocalPath, new Uint8Array(this.data));
       } catch (error) {
         Debug.log("Error saving page:", error);
       }

@@ -5,6 +5,7 @@ import { Debug } from "./debug.js";
 import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
 import { Summary } from "./summary.js";
 import { exists } from 'https://deno.land/std@0.217.0/fs/mod.ts';
+import { lookup } from "https://deno.land/x/mrmime@v2.0.0/mod.ts";
 
 const defaultDelayMs = 100;
 const defaultOutputDirectory = "output";
@@ -13,7 +14,7 @@ const defaultReportFilename = "report.json";
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
   boolean: ["verbose","report-only"],
-  string: ["output", "report"],
+  string: ["output", "report","mime-filter"],
   alias: {
     d: "delay",
     o: "output",
@@ -120,8 +121,19 @@ async function processQueue() {
 }
 
 function shouldEnqueue(url) {
-  // 2. Remove anchor information
+
+  // Remove anchor information
   url.hash = ""; // Reset the hash (anchor) part
+
+  // MIME Type Filtering (if the flag is provided)
+  if (args['mime-filter']) { 
+    const mimeFilter = args['mime-filter'].split(',').map(item => item.trim());
+    const mimeType = lookup(url.pathname); 
+    if (mimeType && !mimeFilter.includes(mimeType)) {
+        Debug.log("Skipping URL due to MIME type:", url.href);
+        return undefined; // Exclude
+    }
+  }
 
   // Check if the URL's hostname matches any of the target hostnames
   const isFromTargetSite = targetUrls.some((targetUrl) => {
