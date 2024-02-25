@@ -6,6 +6,7 @@ import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
 import { Summary } from "./summary.js";
 import { exists } from 'https://deno.land/std@0.217.0/fs/mod.ts';
 import { lookup } from "https://deno.land/x/mrmime@v2.0.0/mod.ts";
+import metadata from './metadata.js';
 
 const defaultDelayMs = 100;
 const defaultOutputDirectory = "output";
@@ -13,13 +14,15 @@ const defaultReportFilename = "report.json";
 
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
-  boolean: ["verbose","report-only"],
+  boolean: ["verbose","report-only","help","version"],
   string: ["output", "report","mime-filter"],
   alias: {
     d: "delay",
     o: "output",
     v: "verbose",
     r: "report",
+    h: "help",
+    v: "version"
   },
 });
 
@@ -27,6 +30,30 @@ const delayMs = args.delay ?? defaultDelayMs;
 const debug = args.verbose ?? false;
 const outputDirectory = args.output ?? defaultOutputDirectory;
 const reportFilename = args.report ?? defaultReportFilename;
+
+// Output help
+if (args.help) { // Check if the 'help' flag is provided
+  console.log(`${metadata.name} ${metadata.version}
+
+A cli tool for recursive web asset crawling and analysis.
+
+Usage:
+  main.js <target_url> [options]
+
+Options:
+  --delay <milliseconds>  Delay between fetches (default: ${defaultDelayMs}ms)
+  −−output <directory>    Output directory (default:"${defaultOutputDirectory}")
+  --report <filename>     Report filename (default: "${defaultReportFilename}")
+  --mime-filter "<mimes>" Comma-separated list of allowed MIME types
+
+  --verbose               Enable verbose logging
+  --report-only           Generates the report without storing assets
+  
+  --help                  Displays this help message
+`);
+
+      Deno.exit(0); // Exit cleanly after displaying help    
+  }
 
 // Get targets from the remainder (non-option arguments)
 const targetUrls = args._;
