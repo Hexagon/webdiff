@@ -1,28 +1,34 @@
-import { assetQueue } from "./queue.js";
 import { Asset } from "./asset.js";
 import { delay } from "./utils.js";
 import { Debug } from "./debug.js";
-import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
 import { Summary } from "./summary.js";
-import { exists } from 'https://deno.land/std@0.217.0/fs/mod.ts';
+import { Robots } from "./robots.js";
+import assetQueue from "./queue.js";
+import metadata from "./metadata.js";
+import userAgents from "./user_agents.js";
+
+import { exists } from "https://deno.land/std@0.217.0/fs/mod.ts";
+import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
 import { lookup } from "https://deno.land/x/mrmime@v2.0.0/mod.ts";
-import metadata from './metadata.js';
 
 const defaultDelayMs = 100;
 const defaultOutputDirectory = "output";
 const defaultReportFilename = "report.json";
+const defaultUserAgentAlias = "webdiff";
 
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
-  boolean: ["verbose","report-only","help","version"],
-  string: ["output", "report","mime-filter"],
+  boolean: ["verbose", "report-only", "help", "version", "ignore-robots"],
+  string: ["output", "report", "mime-filter", "user-agent"],
   alias: {
     d: "delay",
     o: "output",
     v: "verbose",
     r: "report",
     h: "help",
-    v: "version"
+    v: "version",
+    u: "user-agent",
+    i: "ignore-robots",
   },
 });
 
@@ -30,6 +36,7 @@ const delayMs = args.delay ?? defaultDelayMs;
 const debug = args.verbose ?? false;
 const outputDirectory = args.output ?? defaultOutputDirectory;
 const reportFilename = args.report ?? defaultReportFilename;
+const userAgentAlias = args["user-agent"] ?? defaultUserAgentAlias;
 
 // Output help
 if (args.help) { // Check if the 'help' flag is provided
@@ -45,6 +52,8 @@ Options:
   −−output <directory>    Output directory (default:"${defaultOutputDirectory}")
   --report <filename>     Report filename (default: "${defaultReportFilename}")
   --mime-filter "<mimes>" Comma-separated list of allowed MIME types
+  --user-agent <name>     User agent string to use; (none, chrome, ..., default: ${defaultUserAgentAlias})
+  --ignore-robots         Ignore all directives of robots.txt
 
   --verbose               Enable verbose logging
   --report-only           Generates the report without storing assets
@@ -52,19 +61,19 @@ Options:
   --help                  Displays this help message
 `);
 
-      Deno.exit(0); // Exit cleanly after displaying help    
-  }
+  Deno.exit(0); // Exit cleanly after displaying help
+}
 
 // Get targets from the remainder (non-option arguments)
-const targetUrls = args._;
+const targetUrl = args._;
 
-if (targetUrls.length === 0) {
-  console.error("Error: At least one target URL is required.");
+if (targetUrl.length !== 1) {
+  console.error("Error: Exactly one target URL is required.");
   Deno.exit(1);
 }
 
-// Input Validation
-targetUrls.forEach((targetUrl) => {
+// Validate target urls
+targetUrl.forEach((targetUrl) => {
   try {
     new URL(targetUrl); // Validate each URL individually
   } catch (error) {
@@ -74,12 +83,7 @@ targetUrls.forEach((targetUrl) => {
   assetQueue.enqueue(targetUrl);
 });
 
-// Input Validation
-if (!targetUrls.length) {
-  console.error("Error: Target URL is required. Please use --target <url>");
-  Deno.exit(1);
-}
-
+// Validate delayMs
 if (delayMs <= 0) {
   console.error("Error: Delay must be a positive number.");
   Deno.exit(1);
@@ -98,14 +102,26 @@ try {
     Deno.exit(1);
   }
 } catch (error) {
-  if (error.code !== 'ENOENT') {
+  if (error.code !== "ENOENT") {
     // Unexpected error
-    console.error('Error checking output directory:', error);
+    console.error("Error checking output directory:", error);
     Deno.exit(1);
   }
 }
 
-Debug.log("Debugging is on!");
+// User-Agent Validation
+if (!userAgentAlias || !Object.keys(userAgents).includes(userAgentAlias)) {
+  console.error(
+    `Error: Invalid user-agent. Valid options are: ${
+      Object.keys(userAgents).join(", ")
+    }`,
+  );
+  Deno.exit(1);
+}
+
+// Resolve to the actual user agent string
+const resolvedUserAgent = userAgents[userAgentAlias];
+Debug.log(`User user agent string: ${resolvedUserAgent}`);
 
 const summary = new Summary(); // Create a summary object
 
@@ -115,7 +131,7 @@ async function processQueue() {
     const asset = new Asset(url, outputDirectory);
 
     try {
-      await asset.fetch();
+      await asset.fetch(resolvedUserAgent);
       await asset.parse();
       // Find, filter, and enqueue new links
       asset.references.forEach((link) => {
@@ -148,22 +164,23 @@ async function processQueue() {
 }
 
 function shouldEnqueue(url) {
-
   // Remove anchor information
   url.hash = ""; // Reset the hash (anchor) part
 
   // MIME Type Filtering (if the flag is provided)
-  if (args['mime-filter']) { 
-    const mimeFilter = args['mime-filter'].split(',').map(item => item.trim());
-    const mimeType = lookup(url.pathname); 
+  if (args["mime-filter"]) {
+    const mimeFilter = args["mime-filter"].split(",").map((item) =>
+      item.trim()
+    );
+    const mimeType = lookup(url.pathname);
     if (mimeType && !mimeFilter.includes(mimeType)) {
-        Debug.log("Skipping URL due to MIME type:", url.href);
-        return undefined; // Exclude
+      Debug.log("Skipping URL due to MIME type:", url.href);
+      return undefined; // Exclude
     }
   }
 
   // Check if the URL's hostname matches any of the target hostnames
-  const isFromTargetSite = targetUrls.some((targetUrl) => {
+  const isFromTargetSite = targetUrl.some((targetUrl) => {
     return url.hostname === new URL(targetUrl).hostname;
   });
 
@@ -172,6 +189,35 @@ function shouldEnqueue(url) {
   } else {
     return undefined;
   }
+}
+
+async function fetchRobots(targetUrl) {
+  const robots = new Robots(targetUrl);
+  try {
+    await robots.fetch(resolvedUserAgent);
+
+    Debug.log("Found /robots.txt");
+
+    // Modify delay based on crawl-delay
+    if (robots.minimumCrawlDelay !== null) {
+      delayMs = robots.minimumCrawlDelay * 1000;
+      Debug.log(`Adjusted delayMs to ${delayMs} based on robots.txt`);
+    }
+
+    // Add sitemaps
+    robots.sitemaps.forEach((sitemapUrl) => {
+      Debug.log(`Found sitemap in robots.txt: ${sitemapUrl}`);
+      assetQueue.enqueue(sitemapUrl);
+    });
+  } catch (error) {
+    console.error(`Error fetching robots.txt for ${targetUrl}:`, error);
+  }
+}
+
+if (!args["ignore-robots"]) {
+  await fetchRobots(targetUrl[0]);
+} else {
+  Debug.log("Ignoring robots.txt");
 }
 
 await processQueue();

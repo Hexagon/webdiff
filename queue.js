@@ -1,4 +1,4 @@
-export const assetQueue = {
+const assetQueue = {
   urls: new Set(), // Using a Set to ensure unique URLs
   queue: [],
 
@@ -13,3 +13,5 @@ export const assetQueue = {
     return this.queue.shift();
   },
 };
+
+export default assetQueue;

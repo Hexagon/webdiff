@@ -33,6 +33,5 @@ export class Summary {
         console.error(`Error saving report: ${error}`);
       }
     }
-    Debug.log(report);
   }
 }

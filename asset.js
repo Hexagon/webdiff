@@ -30,13 +30,18 @@ export class Asset {
     this.localPath = this.createLocalPath(url, outputDirectory);
   }
 
-  async fetch() {
+  async fetch(userAgent) {
     Debug.log("Fetching: " + this.url);
     let redirectCount = 0;
 
     while (redirectCount < this.redirectLimit) {
       try {
-        const response = await fetch(this.url, { redirect: "manual" });
+        const response = await fetch(this.url, {
+          redirect: "manual",
+          headers: {
+            "User-Agent": userAgent, // Pass the userAgent
+          },
+        });
         if (response.redirected && response.url !== this.url) {
           Debug.log(`Redirected to: ${response.url}`);
           this.url = response.url; // Update the URL
@@ -128,10 +133,6 @@ export class Asset {
       if (!this.lastModified) {
         this.extractHtmlLastModified(document);
       }
-    } else if (this.data_mime === "text/plain") {
-      if (this.url.endsWith("robots.txt")) {
-        this.extractAssetsFromRobots(this.data);
-      }
     } else if (this.data_mime.endsWith("xml")) { // Assuming sitemaps are XML
       if (this.url.endsWith("sitemap.xml")) {
         this.extractAssetsFromSitemap(this.data);
@@ -144,14 +145,14 @@ export class Asset {
     if (!refUrl || !this.url) {
       return; // Or you could throw an error here
     }
-  
+
     // Create a URL object for robust parsing and handling
     const absoluteUrl = new URL(refUrl, this.url);
-  
+
     // Add the resolved absolute URL to the references
     this.references.add(absoluteUrl.href);
   }
-  
+
   extractHtmlAssets(document) {
     Debug.log("Extracting assets from: " + this.url);
 
@@ -192,27 +193,6 @@ export class Asset {
       } catch (error) {
         // Ignore console.error("Error parsing last-modified meta tag:", error);
       }
-    }
-  }
-
-  async extractAssetsFromRobots(data) {
-    const textDecoder = new TextDecoder();
-    const robotsContent = textDecoder.decode(data);
-
-    // Simple regular expression parser:
-    const allowRegex = /Allow:\s*(\S+)/g;
-    let match = undefined;
-    while ((match = allowRegex.exec(robotsContent)) !== null) {
-      const allowedUrl = match[1];
-      this.addReference(allowedUrl);
-    }
-
-    // Sitemap Extraction
-    const sitemapRegex = /Sitemap:\s*(\S+)/g;
-    let matchSitemap;
-    while ((matchSitemap = sitemapRegex.exec(robotsContent)) !== null) {
-      const sitemapUrl = matchSitemap[1];
-      this.addReference(sitemapUrl);
     }
   }
 
