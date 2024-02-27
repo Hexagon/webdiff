@@ -24,7 +24,7 @@ export class Robots {
       }
       this.content = await response.arrayBuffer();
       this.parse();
-    } catch (error) {
+    } catch (_error) {
       Debug.log("/robots.txt not found on hostname.");
     }
   }

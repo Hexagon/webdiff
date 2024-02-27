@@ -37,7 +37,6 @@ const args = parseArgs(Deno.args, {
   alias: {
     d: "delay",
     o: "output",
-    v: "verbose",
     r: "report",
     h: "help",
     v: "version",
@@ -203,7 +202,7 @@ if (targetUrl.length !== 1) {
 targetUrl.forEach((targetUrl) => {
   try {
     new URL(targetUrl); // Validate each URL individually
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error: Invalid target URL: ${targetUrl}`);
     Deno.exit(1);
   }
@@ -234,9 +233,7 @@ try {
 // User-Agent Validation
 if (!userAgentAlias || !Object.keys(userAgents).includes(userAgentAlias)) {
   console.error(
-    `Error: Invalid user-agent. Valid options are: ${
-      Object.keys(userAgents).join(", ")
-    }`,
+    `Error: Invalid user-agent. Valid options are: ${Object.keys(userAgents).join(", ")}`,
   );
   Deno.exit(1);
 }
@@ -291,9 +288,7 @@ function shouldEnqueue(url) {
 
   // MIME Type Filtering (if the flag is provided)
   if (args["mime-filter"]) {
-    const mimeFilter = args["mime-filter"].split(",").map((item) =>
-      item.trim()
-    );
+    const mimeFilter = args["mime-filter"].split(",").map((item) => item.trim());
     const mimeType = lookup(url.pathname);
     if (mimeType && !mimeFilter.includes(mimeType)) {
       Debug.log("Skipping URL due to MIME type:", url.href);

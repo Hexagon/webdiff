@@ -1,27 +1,17 @@
 # Hexagon's webdiff
 
-A Deno-based tool to recursively crawl and analyze web assets, focused on
-identifying changes or differences (hence the tentative name "webdiff"). This
-tool can be valuable for web developers tracking changes to their own sites or
-those of competitors, content managers monitoring updates, and anyone interested
-in website archival or analysis.
+A Deno-based tool to recursively crawl and analyze web assets, focused on identifying changes or differences (hence the tentative name "webdiff"). This tool can be valuable for web developers tracking
+changes to their own sites or those of competitors, content managers monitoring updates, and anyone interested in website archival or analysis.
 
 **Features**
 
-- **Recursive Fetching:** Starting from one or more seed URLs, the tool fetches
-  the web page(s) and parses them to discover links to all other reachable
-  assets (pages, images, stylesheets, scripts) within the same domain.
-- **Resource Discovery:** Follows internal links within a target website (or
-  websites) to discover and download connected assets of any type.
-- **Site summary:** Summarizes the page to a `report.json` containing
-  lastModified, url, a hash of the content and a list of all references (urls)
-  for every discovered asset on the page.
-- **Sitemap and robots.txt Parsing:** Can parse `sitemap.xml` and `robots.txt`
-  to assist in the discovery of assets.
-- **Report Generation:** Creates analyzed reports for understanding differences
-  between fetched assets.
-- **Mime filtering:** Can filter on only interesting mime types to reduce
-  traffic.
+- **Recursive Fetching:** Starting from one or more seed URLs, the tool fetches the web page(s) and parses them to discover links to all other reachable assets (pages, images, stylesheets, scripts)
+  within the same domain.
+- **Resource Discovery:** Follows internal links within a target website (or websites) to discover and download connected assets of any type.
+- **Site summary:** Summarizes the page to a `report.json` containing lastModified, url, a hash of the content and a list of all references (urls) for every discovered asset on the page.
+- **Sitemap and robots.txt Parsing:** Can parse `sitemap.xml` and `robots.txt` to assist in the discovery of assets.
+- **Report Generation:** Creates analyzed reports for understanding differences between fetched assets.
+- **Mime filtering:** Can filter on only interesting mime types to reduce traffic.
 
 ## Prerequisites
 
@@ -48,17 +38,13 @@ in website archival or analysis.
      - `--delay <milliseconds>` Set a delay between fetches (default: 100ms)
      - `--output <directory>` Specify the output directory (default: "./output")
      - `--verbose` Enable verbose debugging output
-     - `--report <filename>` Filename for the generated report (default:
-       "./output/report.json")
+     - `--report <filename>` Filename for the generated report (default: "./output/report.json")
      - `--report-only` Generates the report without storing the assets.
-     - `--mime-filter` Does only process assets with the specified mime type(s),
-       comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
+     - `--mime-filter` Does only process assets with the specified mime type(s), comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
      - `--include-urls` Does only process assets matching the specified regex.
      - `--exclude-urls` Ignores assets matching the specified regex.
-     - `--user-agent` Use a specific user agent string, one of `chrome`,
-       `firefox`, `webdiff` or `none`. (default: `webdiff`)
-     - `--ignore-robots` Ignore directives of `robots.txt` even if found on
-       server.
+     - `--user-agent` Use a specific user agent string, one of `chrome`, `firefox`, `webdiff` or `none`. (default: `webdiff`)
+     - `--ignore-robots` Ignore directives of `robots.txt` even if found on server.
      - `--diff <report1> <report2>` Compares two reports, outputing update, added or removed assets.
 
 ## Example
@@ -67,13 +53,11 @@ in website archival or analysis.
 deno run -A main.js --output ./my_data --delay 500 https://56k.guru
 ```
 
-This will crawl `https://56k.guru`, and download all assets into the specified
-output directory. A `report.json` will also be created.
+This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created.
 
 **Comparing Fetched Versions**
 
-After running the `webdiff` tool on a website at different points in time, you
-might have two separate output directories.
+After running the `webdiff` tool on a website at different points in time, you might have two separate output directories.
 
 **Summary only:**
 
@@ -85,27 +69,21 @@ deno run -A main.js --diff <directory_1>/report.json <directory_2>/report.json
 
 To compare the full directory tree, the external `diff` command is used.
 
-_The 'diff' command is a standard tool on most Unix-based systems (Linux,
-macOS). For users unfamiliar with 'diff', a quick online search can provide
-tutorials._
+_The 'diff' command is a standard tool on most Unix-based systems (Linux, macOS). For users unfamiliar with 'diff', a quick online search can provide tutorials._
 
 ```bash
 diff -r <directory_1>/report.json <directory_2>/report.json
 ```
 
-- Replace <directory_1> and <directory_2> with the paths to the two output
-  directories generated by webdiff.
+- Replace <directory_1> and <directory_2> with the paths to the two output directories generated by webdiff.
 - The -r flag tells diff to compare the directories recursively.
 
 **Understanding the Output**
 
-The diff command will output differences it finds between files in the two
-directories.
+The diff command will output differences it finds between files in the two directories.
 
-- For text files (HTML, CSS, etc.) and the report, it will show line-by-line
-  changes.
-- For binary files (images, etc.), it will simply indicate that the files
-  differ.
+- For text files (HTML, CSS, etc.) and the report, it will show line-by-line changes.
+- For binary files (images, etc.), it will simply indicate that the files differ.
 
 ## Contributions
 
@@ -113,7 +91,6 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ## Disclaimer
 
-This tool is in an early development stage. Use it at your own risk, and always
-respect the `robots.txt` rules of websites you target.
+This tool is in an early development stage. Use it at your own risk, and always respect the `robots.txt` rules of websites you target.
 
 **Let me know if you want me to expand on any particular section or concept!**

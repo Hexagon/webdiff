@@ -118,7 +118,7 @@ export class Asset {
     this.hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  async parse() {
+  parse() {
     if (!this.data) return; // Do nothing if there's no data
 
     if (
@@ -180,7 +180,7 @@ export class Asset {
     );
   }
 
-  async extractHtmlLastModified(document) {
+  extractHtmlLastModified(document) {
     const lastModifiedMeta = document.querySelector(
       'meta[name="last-modified"]',
     );
@@ -197,7 +197,7 @@ export class Asset {
         if (this.lastModified) {
           Debug.log("Successfully extracted lastModified from HTML.");
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore console.error("Error parsing last-modified meta tag:", error);
       }
     } else if (articleModifiedMeta) {
@@ -207,7 +207,7 @@ export class Asset {
         if (this.lastModified) {
           Debug.log("Successfully extracted article:modified meta from HTML.");
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore console.error("Error parsing article:modified meta tag:", error);
       }
     } else if (articlePublishedMeta) {
@@ -217,13 +217,13 @@ export class Asset {
         if (this.lastModified) {
           Debug.log("Successfully extracted article:published meta from HTML.");
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore console.error("Error parsing article:published meta tag:", error);
       }
     }
   }
 
-  async extractAssetsFromSitemap(data) {
+  extractAssetsFromSitemap(data) {
     const textDecoder = new TextDecoder();
     const sitemapText = textDecoder.decode(data);
 
