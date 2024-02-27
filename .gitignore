@@ -130,7 +130,10 @@ dist
 .pnp.*
 
 # Output
+output
 output*
+result.json
+assets/*
 
 # Deno files
 deno.lock

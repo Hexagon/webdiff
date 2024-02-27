@@ -31,14 +31,14 @@ changes to their own sites or those of competitors, content managers monitoring 
 
 3. **Run the script:**
    ```bash
-   deno run main.ts <target_url> --report <filename> --report-only
+   deno run -A webdiff.js <target_url>
    ```
    - Replace `<target_url>` with the actual websites you want to analyze.
    - **Options:**
      - `--delay <milliseconds>` Set a delay between fetches (default: 100ms)
-     - `--output <directory>` Specify the output directory (default: "./output")
+     - `--output <directory>` Specify the output directory (default: "./output/<timestamp>")
      - `--verbose` Enable verbose debugging output
-     - `--report <filename>` Filename for the generated report (default: "./output/report.json")
+     - `--report <filename>` Filename for the generated report (default: "./output/<timestamp>/report.json")
      - `--report-only` Generates the report without storing the assets.
      - `--mime-filter` Does only process assets with the specified mime type(s), comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
      - `--include-urls` Does only process assets matching the specified regex.
@@ -50,7 +50,7 @@ changes to their own sites or those of competitors, content managers monitoring 
 ## Example
 
 ```bash
-deno run -A main.js --output ./my_data --delay 500 https://56k.guru
+deno run -A webdiff.js https://56k.guru
 ```
 
 This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created.
@@ -62,7 +62,7 @@ After running the `webdiff` tool on a website at different points in time, you m
 **Summary only:**
 
 ```bash
-deno run -A main.js --diff <directory_1>/report.json <directory_2>/report.json
+deno run -A webdiff.js --diff <directory_1>/report.json <directory_2>/report.json
 ```
 
 **Full page content:**

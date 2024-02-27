@@ -12,7 +12,7 @@ import metadata from "./metadata.js";
 import userAgents from "./user_agents.js";
 
 const defaultDelayMs = 100;
-const defaultOutputDirectory = "output";
+const defaultOutputDirectory = "output/"+new Date().getTime();
 const defaultReportFilename = "report.json";
 const defaultUserAgentAlias = "webdiff";
 
@@ -69,7 +69,7 @@ Usage:
 
 Options:
   --delay <milliseconds>  Delay between fetches (default: ${defaultDelayMs}ms)
-  −−output <directory>    Output directory (default:"${defaultOutputDirectory}")
+  −−output <directory>    Output directory (default:"./output/<timestamp>")
   --report <filename>     Report filename (default: "${defaultReportFilename}")
   --mime-filter "<mimes>" Comma-separated list of allowed MIME types
   --user-agent <name>     User agent string to use; (none, chrome, ..., default: ${defaultUserAgentAlias})
@@ -242,9 +242,9 @@ if (!userAgentAlias || !Object.keys(userAgents).includes(userAgentAlias)) {
 const resolvedUserAgent = userAgents[userAgentAlias];
 Debug.log(`User user agent string: ${resolvedUserAgent}`);
 
-const summary = new Summary(); // Create a summary object
+export const summary = new Summary(); // Create a summary object
 
-async function processQueue() {
+export async function processQueue() {
   while (assetQueue.queue.length > 0) {
     const url = assetQueue.dequeue();
     const asset = new Asset(url, outputDirectory);
@@ -319,7 +319,7 @@ function shouldEnqueue(url) {
   }
 }
 
-async function fetchRobots(targetUrl) {
+export async function fetchRobots(targetUrl) {
   const robots = new Robots(targetUrl);
   try {
     await robots.fetch(resolvedUserAgent);
@@ -342,15 +342,17 @@ async function fetchRobots(targetUrl) {
   }
 }
 
-if (!args["ignore-robots"]) {
-  await fetchRobots(targetUrl[0]);
-} else {
-  Debug.log("Ignoring robots.txt");
+export async function main() {
+  if (!args["ignore-robots"]) {
+    await fetchRobots(targetUrl[0]);
+  } else {
+    Debug.log("Ignoring robots.txt");
+  }
+
+  await processQueue();
+
+  await summary.generateReport(
+    outputDirectory,
+    reportFilename,
+  );
 }
-
-await processQueue();
-
-await summary.generateReport(
-  outputDirectory,
-  reportFilename,
-);
