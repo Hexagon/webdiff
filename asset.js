@@ -1,8 +1,9 @@
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
-import { dirname, extname, join } from "https://deno.land/std/path/mod.ts";
+import { DOMParser } from "deno_dom/deno-dom-wasm.ts";
+import { dirname, extname, join } from "std/path/mod.ts";
+import { lookup } from "mrmime/mod.ts";
+import { parse } from "xml/mod.ts";
+
 import { Debug } from "./debug.js";
-import { lookup } from "https://deno.land/x/mrmime@v2.0.0/mod.ts";
-import { parse } from "https://deno.land/x/xml@2.1.3/mod.ts";
 
 export class Asset {
   constructor(url, outputDirectory) {
@@ -183,6 +184,12 @@ export class Asset {
     const lastModifiedMeta = document.querySelector(
       'meta[name="last-modified"]',
     );
+    const articleModifiedMeta = document.querySelector(
+      'meta[name="article:modified"]',
+    );
+    const articlePublishedMeta = document.querySelector(
+      'meta[name="article:published"]',
+    );
     if (lastModifiedMeta) {
       const dateString = lastModifiedMeta.getAttribute("content");
       try {
@@ -192,6 +199,26 @@ export class Asset {
         }
       } catch (error) {
         // Ignore console.error("Error parsing last-modified meta tag:", error);
+      }
+    } else if (articleModifiedMeta) {
+      const dateString = articleModifiedMeta.getAttribute("content");
+      try {
+        this.lastModified = new Date(dateString);
+        if (this.lastModified) {
+          Debug.log("Successfully extracted article:modified meta from HTML.");
+        }
+      } catch (error) {
+        // Ignore console.error("Error parsing article:modified meta tag:", error);
+      }
+    } else if (articlePublishedMeta) {
+      const dateString = articlePublishedMeta.getAttribute("content");
+      try {
+        this.lastModified = new Date(dateString);
+        if (this.lastModified) {
+          Debug.log("Successfully extracted article:published meta from HTML.");
+        }
+      } catch (error) {
+        // Ignore console.error("Error parsing article:published meta tag:", error);
       }
     }
   }

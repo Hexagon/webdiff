@@ -53,10 +53,13 @@ in website archival or analysis.
      - `--report-only` Generates the report without storing the assets.
      - `--mime-filter` Does only process assets with the specified mime type(s),
        comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
+     - `--include-urls` Does only process assets matching the specified regex.
+     - `--exclude-urls` Ignores assets matching the specified regex.
      - `--user-agent` Use a specific user agent string, one of `chrome`,
        `firefox`, `webdiff` or `none`. (default: `webdiff`)
      - `--ignore-robots` Ignore directives of `robots.txt` even if found on
        server.
+     - `--diff <report1> <report2>` Compares two reports, outputing update, added or removed assets.
 
 ## Example
 
@@ -70,20 +73,21 @@ output directory. A `report.json` will also be created.
 **Comparing Fetched Versions**
 
 After running the `webdiff` tool on a website at different points in time, you
-might have two separate output directories. Here's how to use the standard
-`diff` command to compare them:
-
-_The 'diff' command is a standard tool on most Unix-based systems (Linux,
-macOS). For users unfamiliar with 'diff', a quick online search can provide
-tutorials._
+might have two separate output directories.
 
 **Summary only:**
 
 ```bash
-diff <directory_1>/report.json <directory_2>/report.json
+deno run -A main.js --diff <directory_1>/report.json <directory_2>/report.json
 ```
 
-**Full page content only:**
+**Full page content:**
+
+To compare the full directory tree, the external `diff` command is used.
+
+_The 'diff' command is a standard tool on most Unix-based systems (Linux,
+macOS). For users unfamiliar with 'diff', a quick online search can provide
+tutorials._
 
 ```bash
 diff -r <directory_1>/report.json <directory_2>/report.json

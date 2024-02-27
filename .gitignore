@@ -131,3 +131,6 @@ dist
 
 # Output
 output*
+
+# Deno files
+deno.lock

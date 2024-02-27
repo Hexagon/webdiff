@@ -1,5 +1,4 @@
-import { Debug } from "./debug.js";
-import { dirname, join } from "https://deno.land/std/path/mod.ts";
+import { dirname, join } from "std/path/mod.ts";
 
 export class Summary {
   constructor() {

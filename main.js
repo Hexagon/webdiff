@@ -1,3 +1,7 @@
+import { exists } from "std/fs/mod.ts";
+import { parseArgs } from "std/cli/parse_args.ts";
+import { lookup } from "mrmime/mod.ts";
+
 import { Asset } from "./asset.js";
 import { delay } from "./utils.js";
 import { Debug } from "./debug.js";
@@ -7,10 +11,6 @@ import assetQueue from "./queue.js";
 import metadata from "./metadata.js";
 import userAgents from "./user_agents.js";
 
-import { exists } from "https://deno.land/std@0.217.0/fs/mod.ts";
-import { parseArgs } from "https://deno.land/std@0.217.0/cli/parse_args.ts";
-import { lookup } from "https://deno.land/x/mrmime@v2.0.0/mod.ts";
-
 const defaultDelayMs = 100;
 const defaultOutputDirectory = "output";
 const defaultReportFilename = "report.json";
@@ -18,8 +18,22 @@ const defaultUserAgentAlias = "webdiff";
 
 // Parse command line arguments
 const args = parseArgs(Deno.args, {
-  boolean: ["verbose", "report-only", "help", "version", "ignore-robots"],
-  string: ["output", "report", "mime-filter", "user-agent"],
+  boolean: [
+    "verbose",
+    "report-only",
+    "help",
+    "version",
+    "ignore-robots",
+    "diff",
+  ],
+  string: [
+    "output",
+    "report",
+    "mime-filter",
+    "user-agent",
+    "include-urls",
+    "exclude-urls",
+  ],
   alias: {
     d: "delay",
     o: "output",
@@ -37,6 +51,13 @@ const debug = args.verbose ?? false;
 const outputDirectory = args.output ?? defaultOutputDirectory;
 const reportFilename = args.report ?? defaultReportFilename;
 const userAgentAlias = args["user-agent"] ?? defaultUserAgentAlias;
+let includeRegex = null;
+let excludeRegex = null;
+
+// Enable debugging if requested
+if (debug) {
+  Debug.enable();
+}
 
 // Output help
 if (args.help) { // Check if the 'help' flag is provided
@@ -54,6 +75,9 @@ Options:
   --mime-filter "<mimes>" Comma-separated list of allowed MIME types
   --user-agent <name>     User agent string to use; (none, chrome, ..., default: ${defaultUserAgentAlias})
   --ignore-robots         Ignore all directives of robots.txt
+  --exclude-urls          Ignore asset urls matching a specific regex
+  --include-urls          Only process asset urls matching a specific regex
+  --diff <file1> <file2>  Compare to reports to find changes
 
   --verbose               Enable verbose logging
   --report-only           Generates the report without storing assets
@@ -62,6 +86,109 @@ Options:
 `);
 
   Deno.exit(0); // Exit cleanly after displaying help
+}
+
+// Run diff
+async function compareJSONFiles(file1Path, file2Path) {
+  // Error handling for file existence
+  if (!await exists(file1Path) || !await exists(file2Path)) {
+    console.error(
+      "One or both JSON files not found. Paths:",
+      file1Path,
+      file2Path,
+    );
+    return;
+  }
+
+  // Load JSON data
+  const file1Data = JSON.parse(await Deno.readTextFile(file1Path));
+  const file2Data = JSON.parse(await Deno.readTextFile(file2Path));
+
+  // Create dictionaries for faster lookups
+  const file1Lookup = {};
+  file1Data.forEach((entry) => file1Lookup[entry.url] = entry);
+
+  const file2Lookup = {};
+  file2Data.forEach((entry) => file2Lookup[entry.url] = entry);
+
+  // Identify changes
+  const changedEntries = [];
+  file2Data.forEach((newEntry) => {
+    const oldEntry = file1Lookup[newEntry.url];
+
+    if (oldEntry) {
+      // Entry exists in both, compare fields
+      if (oldEntry.hash !== newEntry.hash) {
+        // Add lastModified in the output
+        changedEntries.push({
+          url: newEntry.url,
+          changeType: "modified",
+          lastModified: newEntry.lastModified,
+        });
+      }
+    } else {
+      // Entry is new
+      changedEntries.push({
+        url: newEntry.url,
+        changeType: "added",
+      });
+    }
+  });
+
+  // Detect deleted entries
+  file1Data.forEach((oldEntry) => {
+    if (!file2Lookup[oldEntry.url]) {
+      changedEntries.push({
+        url: oldEntry.url,
+        changeType: "removed",
+      });
+    }
+  });
+
+  return changedEntries;
+}
+
+if (args.diff) {
+  const paths = args._;
+
+  if (paths.length !== 2) {
+    console.error("ToDo: Error message");
+    Deno.exit(1);
+  }
+
+  const [report1Path, report2Path] = paths;
+
+  try {
+    const changes = await compareJSONFiles(report1Path, report2Path);
+    console.log("Changes:");
+    console.log(changes); // Output changes to console
+  } catch (error) {
+    console.error("Error comparing reports:", error);
+    Deno.exit(1);
+  }
+
+  Deno.exit(0); //  Exit after performing the comparison
+}
+
+// Handle regexes for inclusion or exclusion
+if (args["include-urls"]) {
+  try {
+    includeRegex = new RegExp(args["include-urls"]);
+    Debug.log(`Only processing assets matching regex: ${args["include-urls"]}`);
+  } catch (error) {
+    console.error("Invalid --include-url regex:", error);
+    Deno.exit(1);
+  }
+}
+
+if (args["exclude-urls"]) {
+  try {
+    excludeRegex = new RegExp(args["exclude-urls"]);
+    Debug.log("Ignoring assets matching regex: " + args["exclude-urls"]);
+  } catch (error) {
+    console.error("Invalid --exclude-url regex:", error);
+    Deno.exit(1);
+  }
 }
 
 // Get targets from the remainder (non-option arguments)
@@ -87,11 +214,6 @@ targetUrl.forEach((targetUrl) => {
 if (delayMs <= 0) {
   console.error("Error: Delay must be a positive number.");
   Deno.exit(1);
-}
-
-// Enable debugging if requested
-if (debug) {
-  Debug.enable();
 }
 
 // Check if the output directory exists
@@ -183,6 +305,17 @@ function shouldEnqueue(url) {
   const isFromTargetSite = targetUrl.some((targetUrl) => {
     return url.hostname === new URL(targetUrl).hostname;
   });
+
+  // Only check regex filters if they are provided
+  if (includeRegex && !includeRegex.test(url.toString())) {
+    Debug.log("Skipping URL: Does not match --include-url regex", url.href);
+    return undefined; // Exclude
+  }
+
+  if (excludeRegex && excludeRegex.test(url.toString())) {
+    Debug.log("Skipping URL: Matches --exclude-url regex", url.href);
+    return undefined; // Exclude
+  }
 
   if (isFromTargetSite) {
     return url.toString();
