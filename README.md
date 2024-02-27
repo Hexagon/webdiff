@@ -38,7 +38,6 @@ changes to their own sites or those of competitors, content managers monitoring 
      - `--delay <milliseconds>` Set a delay between fetches (default: 100ms)
      - `--output <directory>` Specify the output directory (default: "./output/<timestamp>")
      - `--verbose` Enable verbose debugging output
-     - `--report <filename>` Filename for the generated report (default: "./output/<timestamp>/report.json")
      - `--report-only` Generates the report without storing the assets.
      - `--mime-filter` Does only process assets with the specified mime type(s), comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
      - `--include-urls` Does only process assets matching the specified regex.

@@ -1,4 +1,4 @@
-import { Debug } from "./debug.js";
+import { Debug } from "../utils/debug.js";
 
 export class Robots {
   constructor(baseURL) {

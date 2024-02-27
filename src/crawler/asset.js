@@ -3,7 +3,7 @@ import { dirname, extname, join } from "std/path/mod.ts";
 import { lookup } from "mrmime/mod.ts";
 import { parse } from "xml/mod.ts";
 
-import { Debug } from "./debug.js";
+import { Debug } from "../utils/debug.js";
 
 export class Asset {
   constructor(url, outputDirectory) {
