@@ -8,15 +8,15 @@ export class Summary {
   addAssetData(asset) {
     this.assetData.push({
       url: asset.url,
-      localPath: asset.localPath,
       lastModified: asset.lastModified,
+      mime: asset.data_mime,
       hash: asset.hash,
       references: Array.from(asset.references), // Copy references
     });
   }
 
   async generateReport(outputDirectory, fileName) {
-    const report = JSON.stringify(this.assetData, null, 2);
+    const report = JSON.stringify({ report: this.assetData }, null, 2);
     if (outputDirectory) {
       const filePath = join(outputDirectory, fileName);
 

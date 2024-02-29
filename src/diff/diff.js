@@ -61,7 +61,6 @@ async function compareJSONFiles(file1Path, file2Path) {
 }
 
 export async function diff(args) {
-
   const paths = args._;
 
   if (paths.length !== 2) {

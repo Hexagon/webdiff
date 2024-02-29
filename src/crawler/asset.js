@@ -1,14 +1,15 @@
 import { DOMParser } from "deno_dom/deno-dom-wasm.ts";
 import { dirname, extname, join } from "std/path/mod.ts";
+import { exists } from "std/fs/mod.ts";
 import { lookup } from "mrmime/mod.ts";
 import { parse } from "xml/mod.ts";
-
+import { gzip } from "compress/mod.ts";
 import { Debug } from "../utils/debug.js";
 
 export class Asset {
   constructor(url, outputDirectory) {
     /* The original url */
-    this.url = url;
+    this.url = decodeURI(new URL(url).href);
 
     /* The data */
     this.ok = false; // Successful request with status >= 200 and < 300
@@ -26,9 +27,6 @@ export class Asset {
 
     /* States */
     this.tries = 0;
-
-    /* Generated local path to asset */
-    this.localPath = this.createLocalPath(url, outputDirectory);
   }
 
   async fetch(userAgent) {
@@ -37,7 +35,7 @@ export class Asset {
 
     while (redirectCount < this.redirectLimit) {
       try {
-        const response = await fetch(this.url, {
+        const response = await fetch(encodeURI(this.url), {
           redirect: "manual",
           headers: {
             "User-Agent": userAgent, // Pass the userAgent
@@ -247,30 +245,18 @@ export class Asset {
     return attribute ? attribute.value : null;
   }
 
-  createLocalPath(url) {
-    const urlPath = new URL(url).pathname;
-    let relativePath = join("assets", urlPath); // Use path.join for consistency
-    relativePath = relativePath.replace(/^\//, "");
-
-    // Only append .html in specific cases
-    const defaultIndexName = "index.html";
-    if (extname(relativePath) === "" && !relativePath.endsWith("/")) {
-      relativePath += "/";
-      relativePath += defaultIndexName;
-    } else if (relativePath.endsWith("/")) {
-      relativePath += defaultIndexName;
+  async save(assetDirectory) {
+    const fullLocalPath = join(assetDirectory, "assets", this.hash);
+    if (await exists(fullLocalPath)) {
+      // Asset already exists
+      return;
     }
-
-    return relativePath;
-  }
-
-  async save(outputDirectory) {
-    const fullLocalPath = join(outputDirectory, this.localPath);
     if (this.ok) {
       const dirPath = dirname(fullLocalPath);
       try {
         await Deno.mkdir(dirPath, { recursive: true });
-        await Deno.writeFile(fullLocalPath, new Uint8Array(this.data));
+        const data = gzip(new Uint8Array(this.data));
+        await Deno.writeFile(fullLocalPath, data);
       } catch (error) {
         Debug.log("Error saving page:", error);
       }

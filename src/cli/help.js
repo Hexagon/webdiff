@@ -1,7 +1,7 @@
 import metadata from "../../metadata.js";
 
 export function help(args) {
-    console.log(`${metadata.name} ${metadata.version}
+  console.log(`${metadata.name} ${metadata.version}
   
   A cli tool for recursive web asset crawling and analysis.
   

@@ -70,7 +70,6 @@ async function fetchRobots(targetUrl, userAgentString) {
 export const summary = new Summary(); // Create a summary object
 
 export async function crawl(args) {
-
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed
   let includeRegex = null;
@@ -129,13 +128,15 @@ export async function crawl(args) {
         if (link) { // Ensure the link has an href attribute
           try {
             const resolvedUrl = new URL(link, targetUrl); // Resolve against the current asset
-            if (shouldEnqueue(
-              resolvedUrl,
-              targetUrl,
-              mimeFilter,
-              includeRegex,
-              excludeRegex
-            )) { // Apply your filtering logic
+            if (
+              shouldEnqueue(
+                resolvedUrl,
+                targetUrl,
+                mimeFilter,
+                includeRegex,
+                excludeRegex,
+              )
+            ) { // Apply your filtering logic
               assetQueue.enqueue(resolvedUrl.href);
             }
           } catch (error) {
@@ -161,6 +162,6 @@ export async function crawl(args) {
 
   await summary.generateReport(
     args.output,
-    "report.json",
+    args.report,
   );
 }

@@ -7,17 +7,17 @@ import { Debug } from "./src/utils/debug.js";
 const args = await parseAndValidateArgs();
 
 if (args.verbose) {
-    Debug.enable();
+  Debug.enable();
 }
 
 if (args.help) {
-    help(args);
-    Deno.exit(0);
-} 
+  help(args);
+  Deno.exit(0);
+}
 
 if (args.diff) {
-    diff(args);
-    Deno.exit(0);
+  diff(args);
+  Deno.exit(0);
 }
 
 // Default action is to crawl

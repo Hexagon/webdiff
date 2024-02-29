@@ -31,9 +31,10 @@ export async function parseAndValidateArgs() {
     },
     default: {
       delay: 100,
-      output: "output/"+new Date().getTime(),
-      "user-agent": "webdiff"
-    }
+      output: "output/",
+      "user-agent": "webdiff",
+      report: new Date().getTime() + ".json",
+    },
   });
 
   // Validate delayMs
@@ -46,21 +47,6 @@ export async function parseAndValidateArgs() {
     Deno.exit(1);
   }
 
-  // Validate output directory (can not exist)
-  try {
-    const result = await exists(parsedArgs.output);
-    if (result) {
-      console.error(`Output directory '${parsedArgs.output}' already exists.`);
-      Deno.exit(1);
-    }
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      // Unexpected error
-      console.error("Error checking output directory:", error);
-      Deno.exit(1);
-    }
-  }
-
   // Validate user agent string
   if (!parsedArgs["user-agent"] || !Object.keys(userAgents).includes(parsedArgs["user-agent"])) {
     console.error(
@@ -69,24 +55,23 @@ export async function parseAndValidateArgs() {
     Deno.exit(1);
   }
 
-    // Validate regexes for inclusion or exclusion  
-    if (parsedArgs["include-urls"]) {
-      try {
-        const includeRegex = new RegExp(parsedArgs["include-urls"]);
-      } catch (error) {
-        console.error("Invalid --include-url regex:", error);
-        Deno.exit(1);
-      }
-    }  
-    if (parsedArgs["exclude-urls"]) {
-      try {
-        const excludeRegex = new RegExp(parsedArgs["exclude-urls"]);
-      } catch (error) {
-        console.error("Invalid --exclude-url regex:", error);
-        Deno.exit(1);
-      }
+  // Validate regexes for inclusion or exclusion
+  if (parsedArgs["include-urls"]) {
+    try {
+      const includeRegex = new RegExp(parsedArgs["include-urls"]);
+    } catch (error) {
+      console.error("Invalid --include-url regex:", error);
+      Deno.exit(1);
     }
-  
+  }
+  if (parsedArgs["exclude-urls"]) {
+    try {
+      const excludeRegex = new RegExp(parsedArgs["exclude-urls"]);
+    } catch (error) {
+      console.error("Invalid --exclude-url regex:", error);
+      Deno.exit(1);
+    }
+  }
 
   return parsedArgs;
 }
