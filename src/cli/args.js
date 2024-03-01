@@ -1,6 +1,5 @@
 import { parseArgs } from "std/cli/parse_args.ts";
-import { exists } from "std/fs/mod.ts";
-import userAgents from "../crawler/user_agents.js";
+import userAgents from "../crawl/user_agents.js";
 
 export async function parseAndValidateArgs() {
   const parsedArgs = parseArgs(Deno.args, {
@@ -8,9 +7,11 @@ export async function parseAndValidateArgs() {
       "verbose",
       "report-only",
       "help",
-      "version",
       "ignore-robots",
-      "diff",
+    ],
+    number: [
+      "port",
+      "delay",
     ],
     string: [
       "output",
@@ -22,15 +23,16 @@ export async function parseAndValidateArgs() {
     ],
     alias: {
       d: "delay",
+      p: "port",
       o: "output",
       r: "report",
-      h: "help",
-      v: "version",
       u: "user-agent",
       i: "ignore-robots",
+      h: "help",
     },
     default: {
       delay: 100,
+      port: 8080,
       output: "output/",
       "user-agent": "webdiff",
       report: new Date().getTime() + ".json",

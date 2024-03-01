@@ -1,4 +1,6 @@
 import { exists } from "std/fs/mod.ts";
+import { colors } from "cliffy/ansi/mod.ts";
+import { Table } from "cliffy/table/mod.ts";
 
 // Run diff
 async function compareJSONFiles(file1Path, file2Path) {
@@ -18,14 +20,14 @@ async function compareJSONFiles(file1Path, file2Path) {
 
   // Create dictionaries for faster lookups
   const file1Lookup = {};
-  file1Data.forEach((entry) => file1Lookup[entry.url] = entry);
+  file1Data.report.forEach((entry) => file1Lookup[entry.url] = entry);
 
   const file2Lookup = {};
-  file2Data.forEach((entry) => file2Lookup[entry.url] = entry);
+  file2Data.report.forEach((entry) => file2Lookup[entry.url] = entry);
 
   // Identify changes
   const changedEntries = [];
-  file2Data.forEach((newEntry) => {
+  file2Data.report.forEach((newEntry) => {
     const oldEntry = file1Lookup[newEntry.url];
 
     if (oldEntry) {
@@ -48,7 +50,7 @@ async function compareJSONFiles(file1Path, file2Path) {
   });
 
   // Detect deleted entries
-  file1Data.forEach((oldEntry) => {
+  file1Data.report.forEach((oldEntry) => {
     if (!file2Lookup[oldEntry.url]) {
       changedEntries.push({
         url: oldEntry.url,
@@ -60,20 +62,31 @@ async function compareJSONFiles(file1Path, file2Path) {
   return changedEntries;
 }
 
-export async function diff(args) {
-  const paths = args._;
-
-  if (paths.length !== 2) {
-    console.error("ToDo: Error message");
-    Deno.exit(1);
-  }
-
-  const [report1Path, report2Path] = paths;
-
+export async function diff(report1Path, report2Path) {
   try {
     const changes = await compareJSONFiles(report1Path, report2Path);
-    console.log("Changes:");
-    console.log(changes); // Output changes to console
+
+    // Create a table for structured output
+    const table = new Table()
+      .header([colors.bold("URL"), colors.bold("Change Type"), colors.bold("Last Modified")]);
+
+    changes.forEach((change) => {
+      let changeTypeDisplay = change.changeType;
+      switch (change.changeType) {
+        case "added":
+          changeTypeDisplay = colors.green(changeTypeDisplay);
+          break;
+        case "removed":
+          changeTypeDisplay = colors.red(changeTypeDisplay);
+          break;
+        case "modified":
+          changeTypeDisplay = colors.yellow(changeTypeDisplay);
+          break;
+      }
+      table.push([change.url, changeTypeDisplay, change.lastModified || ""]);
+    });
+
+    console.log(table.toString());
   } catch (error) {
     console.error("Error comparing reports:", error);
     Deno.exit(1);

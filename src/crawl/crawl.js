@@ -1,4 +1,5 @@
 import { lookup } from "mrmime/mod.ts";
+import { colors, tty } from "cliffy/ansi/mod.ts";
 
 import { Asset } from "./asset.js";
 import { delay } from "../utils/delay.js";
@@ -22,9 +23,10 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
   }
 
   // Check if the URL's hostname matches any of the target hostnames
-  const isFromTargetSite = baseUrl.some((targetUrl) => {
-    return url.hostname === new URL(targetUrl).hostname;
-  });
+  const isFromTargetSite = baseUrl ? url.hostname === new URL(baseUrl).hostname : false;
+  if (!isFromTargetSite) {
+    return false;
+  }
 
   // Only check regex filters if they are provided
   if (includeRegex && !includeRegex.test(url.toString())) {
@@ -69,7 +71,7 @@ async function fetchRobots(targetUrl, userAgentString) {
 
 export const summary = new Summary(); // Create a summary object
 
-export async function crawl(args) {
+export async function crawl(targetUrl, args) {
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed
   let includeRegex = null;
@@ -82,15 +84,6 @@ export async function crawl(args) {
     excludeRegex = new RegExp(args["exclude-urls"]);
     Debug.log("Ignoring assets matching regex: " + args["exclude-urls"]);
   }
-
-  // Validate target urls
-  if (args._.length !== 1) {
-    console.error("Error: Exactly one target URL is required.");
-    Deno.exit(1);
-  }
-
-  // Get targets from the remainder (non-option arguments)
-  const targetUrl = args._;
 
   try {
     new URL(targetUrl); // Validate each URL individually
@@ -108,7 +101,7 @@ export async function crawl(args) {
   Debug.log(`User user agent string: ${resolvedUserAgent}`);
 
   if (!args["ignore-robots"]) {
-    await fetchRobots(targetUrl[0], resolvedUserAgent);
+    await fetchRobots(targetUrl, resolvedUserAgent);
   } else {
     Debug.log("Ignoring robots.txt");
   }
@@ -116,6 +109,9 @@ export async function crawl(args) {
   const mimeFilter = args["mime-filter"] ? args["mime-filter"].split(",").map((item) => item.trim()) : null;
 
   // Process Queue
+  let assetsProcessed = 0;
+  console.log(colors.bold("Processing queue\n"));
+
   while (assetQueue.queue.length > 0) {
     const url = assetQueue.dequeue();
     const asset = new Asset(url, args.output);
@@ -152,12 +148,10 @@ export async function crawl(args) {
       await delay(args.delay);
     }
 
-    Debug.log(
-      "Queue Status: Length:",
-      assetQueue.queue.length,
-      " Next:",
-      assetQueue.queue[0],
-    );
+    tty.cursorLeft().cursorUp();
+    console.log(`[${assetsProcessed}/${assetsProcessed + assetQueue.queue.length}] ${url}`);
+
+    assetsProcessed++;
   }
 
   await summary.generateReport(

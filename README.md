@@ -31,7 +31,7 @@ changes to their own sites or those of competitors, content managers monitoring 
 
 3. **Run the script:**
    ```bash
-   deno run -A webdiff.js <target_url>
+   deno run -A webdiff.js crawl <target_url>
    ```
    - Replace `<target_url>` with the actual websites you want to analyze.
    - **Options:**
@@ -44,12 +44,11 @@ changes to their own sites or those of competitors, content managers monitoring 
      - `--exclude-urls` Ignores assets matching the specified regex.
      - `--user-agent` Use a specific user agent string, one of `chrome`, `firefox`, `webdiff` or `none`. (default: `webdiff`)
      - `--ignore-robots` Ignore directives of `robots.txt` even if found on server.
-     - `--diff <report1> <report2>` Compares two reports, outputing update, added or removed assets.
 
 ## Example
 
 ```bash
-deno run -A webdiff.js https://56k.guru
+deno run -A webdiff.js crawl https://56k.guru
 ```
 
 This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created.
@@ -61,7 +60,7 @@ After running the `webdiff` tool on a website at different points in time, you m
 **Summary only:**
 
 ```bash
-deno run -A webdiff.js --diff <directory_1>/report.json <directory_2>/report.json
+deno run -A webdiff.js diff <directory_1>/report.json <directory_2>/report.json
 ```
 
 **Full page content:**
