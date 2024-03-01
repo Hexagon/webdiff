@@ -27,7 +27,6 @@ export function help(args) {
     ["  --ignore-robots", "Ignore all directives of robots.txt", ""],
     ["  --exclude-urls", "Ignore asset urls matching a specific regex", ""],
     ["  --include-urls", "Only process asset urls matching a specific regex", ""],
-    ["  --diff <file1> <file2>", "Compare to reports to find changes", ""],
     ["  --verbose", "Enable verbose logging", ""],
     ["  --report-only", "Generates the report without storing assets", ""],
     ["  --help", "Displays this help message", ""],

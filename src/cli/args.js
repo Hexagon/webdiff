@@ -1,7 +1,7 @@
 import { parseArgs } from "std/cli/parse_args.ts";
 import userAgents from "../crawl/user_agents.js";
 
-export async function parseAndValidateArgs() {
+export function parseAndValidateArgs() {
   const parsedArgs = parseArgs(Deno.args, {
     boolean: [
       "verbose",
@@ -60,17 +60,17 @@ export async function parseAndValidateArgs() {
   // Validate regexes for inclusion or exclusion
   if (parsedArgs["include-urls"]) {
     try {
-      const includeRegex = new RegExp(parsedArgs["include-urls"]);
+      new RegExp(parsedArgs["include-urls"]);
     } catch (error) {
-      console.error("Invalid --include-url regex:", error);
+      console.error("Invalid --include-url regex:" + parsedArgs["include-urls"], error);
       Deno.exit(1);
     }
   }
   if (parsedArgs["exclude-urls"]) {
     try {
-      const excludeRegex = new RegExp(parsedArgs["exclude-urls"]);
+      new RegExp(parsedArgs["exclude-urls"]);
     } catch (error) {
-      console.error("Invalid --exclude-url regex:", error);
+      console.error("Invalid --exclude-url regex:" + parsedArgs["include-urls"], error);
       Deno.exit(1);
     }
   }

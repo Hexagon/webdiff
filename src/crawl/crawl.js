@@ -1,9 +1,9 @@
 import { lookup } from "mrmime/mod.ts";
-import { colors, tty } from "cliffy/ansi/mod.ts";
+import { colors } from "cliffy/ansi/mod.ts";
 
 import { Asset } from "./asset.js";
 import { delay } from "../utils/delay.js";
-import { Debug } from "../utils/debug.js";
+import { Debug } from "../cli/debug.js";
 import { Summary } from "./summary.js";
 import { Robots } from "./robots.js";
 import assetQueue from "./queue.js";
@@ -17,7 +17,7 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
   if (mimeFilter) {
     const mimeType = lookup(url.pathname);
     if (mimeType && !mimeFilter.includes(mimeType)) {
-      Debug.log("Skipping URL due to MIME type:", url.href);
+      Debug.debugFeed("Skipping URL due to MIME type:", url.href);
       return undefined; // Exclude
     }
   }
@@ -30,12 +30,12 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
 
   // Only check regex filters if they are provided
   if (includeRegex && !includeRegex.test(url.toString())) {
-    Debug.log("Skipping URL: Does not match --include-url regex", url.href);
+    Debug.logFeed("Skipping URL: Does not match --include-url regex", url.href);
     return undefined; // Exclude
   }
 
   if (excludeRegex && excludeRegex.test(url.toString())) {
-    Debug.log("Skipping URL: Matches --exclude-url regex", url.href);
+    Debug.debugFeed("Skipping URL: Matches --exclude-url regex", url.href);
     return undefined; // Exclude
   }
 
@@ -51,38 +51,40 @@ async function fetchRobots(targetUrl, userAgentString) {
   try {
     await robots.fetch(userAgentString);
 
-    Debug.log("Found /robots.txt");
+    Debug.debugFeed("Found /robots.txt");
 
     // Modify delay based on crawl-delay
     if (robots.minimumCrawlDelay !== null) {
       delayMs = robots.minimumCrawlDelay * 1000;
-      Debug.log(`Adjusted delayMs to ${delayMs} based on robots.txt`);
+      Debug.debugFeed(`Adjusted delayMs to ${delayMs} based on robots.txt`);
     }
 
     // Add sitemaps
     robots.sitemaps.forEach((sitemapUrl) => {
-      Debug.log(`Found sitemap in robots.txt: ${sitemapUrl}`);
+      Debug.debugFeed(`Found sitemap in robots.txt: ${sitemapUrl}`);
       assetQueue.enqueue(sitemapUrl);
     });
   } catch (error) {
-    console.error(`Error fetching robots.txt for ${targetUrl}:`, error);
+    throw new CrawlError(`Error fetching robots.txt for ${targetUrl}`, targetUrl, error);
   }
 }
 
 export const summary = new Summary(); // Create a summary object
 
 export async function crawl(targetUrl, args) {
+  console.log(colors.bold("Processing queue\n"));
+
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed
   let includeRegex = null;
   let excludeRegex = null;
   if (args["include-urls"]) {
     includeRegex = new RegExp(args["include-urls"]);
-    Debug.log(`Only processing assets matching regex: ${args["include-urls"]}`);
+    Debug.debugFeed(`Only processing assets matching regex: ${args["include-urls"]}`);
   }
   if (args["exclude-urls"]) {
     excludeRegex = new RegExp(args["exclude-urls"]);
-    Debug.log("Ignoring assets matching regex: " + args["exclude-urls"]);
+    Debug.debugFeed("Ignoring assets matching regex: " + args["exclude-urls"]);
   }
 
   try {
@@ -98,19 +100,22 @@ export async function crawl(targetUrl, args) {
   // Resolve to the actual user agent string
   // - Already validated by args.js, no need for error handling
   const resolvedUserAgent = userAgents[args["user-agent"]];
-  Debug.log(`User user agent string: ${resolvedUserAgent}`);
+  Debug.debugFeed(`User user agent string: ${resolvedUserAgent}`);
 
   if (!args["ignore-robots"]) {
-    await fetchRobots(targetUrl, resolvedUserAgent);
+    try {
+      await fetchRobots(targetUrl, resolvedUserAgent);
+    } catch (error) {
+      Debug.errorFeed(error);
+    }
   } else {
-    Debug.log("Ignoring robots.txt");
+    Debug.debugFeed("Ignoring robots.txt");
   }
 
   const mimeFilter = args["mime-filter"] ? args["mime-filter"].split(",").map((item) => item.trim()) : null;
 
   // Process Queue
   let assetsProcessed = 0;
-  console.log(colors.bold("Processing queue\n"));
 
   while (assetQueue.queue.length > 0) {
     const url = assetQueue.dequeue();
@@ -136,20 +141,19 @@ export async function crawl(targetUrl, args) {
               assetQueue.enqueue(resolvedUrl.href);
             }
           } catch (error) {
-            Debug.log("Error processing link:", link, error);
+            Debug.debugFeed("Error processing link:", link, error);
           }
         }
       });
       if (!args["report-only"]) await asset.save(args.output); // Save the asset
       summary.addAssetData(asset); // Add asset data to the summary
     } catch (error) {
-      console.error(error);
+      Debug.errorFeed(error);
     } finally {
       await delay(args.delay);
     }
 
-    tty.cursorLeft().cursorUp();
-    console.log(`[${assetsProcessed}/${assetsProcessed + assetQueue.queue.length}] ${url}`);
+    Debug.logFeed(`[${assetsProcessed}/${assetsProcessed + assetQueue.queue.length}] ${url}`);
 
     assetsProcessed++;
   }

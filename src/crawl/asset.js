@@ -1,13 +1,13 @@
 import { DOMParser } from "deno_dom/deno-dom-wasm.ts";
-import { dirname, extname, join } from "std/path/mod.ts";
+import { dirname, join } from "std/path/mod.ts";
 import { exists } from "std/fs/mod.ts";
 import { lookup } from "mrmime/mod.ts";
 import { parse } from "xml/mod.ts";
 import { gzip } from "compress/mod.ts";
-import { Debug } from "../utils/debug.js";
+import { Debug } from "../cli/debug.js";
 
 export class Asset {
-  constructor(url, outputDirectory) {
+  constructor(url) {
     /* The original url */
     this.url = decodeURI(new URL(url).href);
 
@@ -30,7 +30,7 @@ export class Asset {
   }
 
   async fetch(userAgent) {
-    Debug.log("Fetching: " + this.url);
+    Debug.debug("Fetching: " + this.url);
     let redirectCount = 0;
 
     while (redirectCount < this.redirectLimit) {
@@ -42,13 +42,13 @@ export class Asset {
           },
         });
         if (response.redirected && response.url !== this.url) {
-          Debug.log(`Redirected to: ${response.url}`);
+          Debug.debug(`Redirected to: ${response.url}`);
           this.url = response.url; // Update the URL
           redirectCount++;
           continue; // Initiate re-fetch
         }
         if (response.status === 301 && response.headers.has("Location")) {
-          Debug.log(`Redirected (301) to: ${response.headers.get("Location")}`);
+          Debug.debug(`Redirected (301) to: ${response.headers.get("Location")}`);
           this.url = response.headers.get("Location"); // Update URL
           redirectCount++;
           continue;
@@ -58,7 +58,7 @@ export class Asset {
 
         // Check response type
         if (!(response.status >= 200 && response.status < 300)) {
-          throw new Error("Status not ok");
+          throw new Error("Status not ok (" + response.status + ")");
         } else {
           this.ok = true;
         }
@@ -70,7 +70,7 @@ export class Asset {
         if (!this.data_mime) {
           // No MIME type provided. Attempt to guess from filename
           this.data_mime = lookup(this.localPath) || "application/octet-stream"; // Default fallback
-          Debug.log(
+          Debug.debug(
             `Guessed MIME type: ${this.data_mime} for asset ${this.url}`,
           );
         }
@@ -84,18 +84,16 @@ export class Asset {
         await this.calculateHash(); // Calculate hash here
 
         break; // Exit the loop
-      } catch (error) {
+      } catch (_error) {
         this.tries++;
-        console.error(
+        throw new Error(
           `Error fetching ${this.url} (attempt ${this.tries}):`,
-          error,
         );
-        break; // Exit loop on error
       }
     }
 
     if (redirectCount >= this.redirectLimit) {
-      Debug.log(`Redirect limit reached for ${this.url}`);
+      Debug.debug(`Redirect limit reached for ${this.url}`);
     }
   }
 
@@ -153,7 +151,7 @@ export class Asset {
   }
 
   extractHtmlAssets(document) {
-    Debug.log("Extracting assets from: " + this.url);
+    Debug.debug("Extracting assets from: " + this.url);
 
     // Find scripts
     Array.from(document.querySelectorAll("script")).forEach((script) => {
@@ -173,7 +171,7 @@ export class Asset {
       if (href) this.addReference(href);
     });
 
-    Debug.log(
+    Debug.debug(
       `\tFound ${this.references.size} referenced urls.`,
     );
   }
@@ -193,7 +191,7 @@ export class Asset {
       try {
         this.lastModified = new Date(dateString);
         if (this.lastModified) {
-          Debug.log("Successfully extracted lastModified from HTML.");
+          Debug.debug("Successfully extracted lastModified from HTML.");
         }
       } catch (_error) {
         // Ignore console.error("Error parsing last-modified meta tag:", error);
@@ -203,7 +201,7 @@ export class Asset {
       try {
         this.lastModified = new Date(dateString);
         if (this.lastModified) {
-          Debug.log("Successfully extracted article:modified meta from HTML.");
+          Debug.debug("Successfully extracted article:modified meta from HTML.");
         }
       } catch (_error) {
         // Ignore console.error("Error parsing article:modified meta tag:", error);
@@ -213,7 +211,7 @@ export class Asset {
       try {
         this.lastModified = new Date(dateString);
         if (this.lastModified) {
-          Debug.log("Successfully extracted article:published meta from HTML.");
+          Debug.debug("Successfully extracted article:published meta from HTML.");
         }
       } catch (_error) {
         // Ignore console.error("Error parsing article:published meta tag:", error);
@@ -236,7 +234,7 @@ export class Asset {
         });
       }
     } catch (error) {
-      Debug.log("Error parsing sitemap:", error);
+      Debug.debug("Error parsing sitemap:", error);
     }
   }
 
@@ -258,7 +256,7 @@ export class Asset {
         const data = gzip(new Uint8Array(this.data));
         await Deno.writeFile(fullLocalPath, data);
       } catch (error) {
-        Debug.log("Error saving page:", error);
+        Debug.debug("Error saving page:", error);
       }
     }
   }

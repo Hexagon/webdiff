@@ -3,15 +3,15 @@ import { parseAndValidateArgs } from "./src/cli/args.js";
 import { help } from "./src/cli/help.js";
 import { diff } from "./src/diff/diff.js";
 import { crawl } from "./src/crawl/crawl.js";
-import { serve } from "./src/serve/serve.ts";
+import { serve } from "./src/serve/serve.js";
 
-import { Debug } from "./src/utils/debug.js";
+import { Debug } from "./src/cli/debug.js";
 
 const args = await parseAndValidateArgs();
 
 // Enable debug first of all
 if (args.verbose) {
-  Debug.enable();
+  Debug.verbose();
 }
 
 // Extract action

@@ -14,7 +14,7 @@ export async function serve(port, outputDir, reportFileName) {
     const urlHashMapping = new Map(assetData.report.map((obj) => [new URL(obj.url).pathname, obj.hash]));
     const mimeMapping = new Map(assetData.report.map((obj) => [new URL(obj.url).pathname, obj.mime]));
 
-    const handler = async (req: Request): Promise<Response> => {
+    const handler = async (req) => {
       const requestedPath = new URL(req.url).pathname; // Remove leading '/'
 
       // Find the hash
@@ -31,7 +31,7 @@ export async function serve(port, outputDir, reportFileName) {
           status: 200,
           headers: { "content-type": mimeType },
         });
-      } catch (error) {
+      } catch (_error) {
         return new Response("Internal Server Error", { status: 500 });
       }
     };
