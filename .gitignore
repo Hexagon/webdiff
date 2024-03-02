@@ -130,10 +130,8 @@ dist
 .pnp.*
 
 # Output
-output
-output*
-result.json
-assets/*
+assets
+report-*.json
 
 # Deno files
 deno.lock

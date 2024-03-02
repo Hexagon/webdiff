@@ -1,4 +1,4 @@
-import metadata from "../../metadata.js";
+import metadata from "../../deno.json" with { type: "json" };
 
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
@@ -11,8 +11,8 @@ export function help(args) {
 
   console.log(colors.bold("Usage\n"));
 
-  console.log(colors.green(`  ${command} serve <filename>`));
-  console.log(colors.green(`  ${command} diff <file1> <file2>`));
+  console.log(colors.green(`  ${command} serve <report>`));
+  console.log(colors.green(`  ${command} diff <report1> <report2>`));
   console.log(colors.green(`  ${command} crawl [<target_url>] [options]\n`));
 
   const table = new Table()
@@ -20,8 +20,8 @@ export function help(args) {
 
   table.push(
     ["  --delay <milliseconds>", "Delay between fetches", `${args.delay}ms`],
-    ["  −−output <directory>", "Output directory", `"./output"`],
-    ["  --report <filename>", "Report filename", "<timestamp>.json"],
+    ["  --directory <directory>", "Report directory", `"./"`],
+    ["  --report <filename>", "Report filename", "report-<timestamp>.json"],
     ["  --mime-filter <mimes>", "Comma-separated list of allowed MIME types", ""], // Or a default if applicable
     ["  --user-agent <name>", "User agent string to use", `none, chrome, ..., default: ${args["user-agent"]}`],
     ["  --ignore-robots", "Ignore all directives of robots.txt", ""],

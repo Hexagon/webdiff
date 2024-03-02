@@ -33,9 +33,9 @@ export function parseAndValidateArgs() {
     default: {
       delay: 100,
       port: 8080,
-      output: "output/",
+      output: "./",
       "user-agent": "webdiff",
-      report: new Date().getTime() + ".json",
+      report: `report-${new Date().getTime()}.json`,
     },
   });
 
