@@ -1,4 +1,4 @@
-import { exists } from "std/fs/mod.ts";
+import { exists } from "std/fs";
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
 

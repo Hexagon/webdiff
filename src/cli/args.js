@@ -1,4 +1,4 @@
-import { parseArgs } from "std/cli/parse_args.ts";
+import { parseArgs } from "std/cli";
 import userAgents from "../crawl/user_agents.js";
 
 export function parseAndValidateArgs() {

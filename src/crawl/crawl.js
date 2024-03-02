@@ -1,4 +1,4 @@
-import { lookup } from "mrmime/mod.ts";
+import { lookup } from "mrmime";
 import { colors } from "cliffy/ansi/mod.ts";
 
 import { Asset } from "./asset.js";

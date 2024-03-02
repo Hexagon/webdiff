@@ -1,6 +1,6 @@
-import { gunzip } from "compress/mod.ts";
+import { unzlibSync } from "fflate";
 import { colors } from "cliffy/ansi/mod.ts";
-import { join } from "std/path/mod.ts";
+import { join } from "std/path";
 
 export async function serve(port, outputDir, reportFileName) {
   try {
@@ -25,7 +25,7 @@ export async function serve(port, outputDir, reportFileName) {
       try {
         // Try to read the asset
         const filePath = `${assetDir}/${fileHash}`;
-        const file = gunzip(await Deno.readFile(filePath));
+        const file = unzlibSync(await Deno.readFile(filePath));
         const mimeType = mimeMapping.get(requestedPath) || "application/octet-stream";
         return new Response(file, {
           status: 200,

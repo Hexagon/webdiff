@@ -1,4 +1,4 @@
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, join } from "std/path";
 
 export class Summary {
   constructor() {

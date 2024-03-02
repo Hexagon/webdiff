@@ -1,9 +1,9 @@
-import { DOMParser } from "deno_dom/deno-dom-wasm.ts";
-import { dirname, join } from "std/path/mod.ts";
-import { exists } from "std/fs/mod.ts";
-import { lookup } from "mrmime/mod.ts";
+import { DOMParser } from "linkedom";
+import { dirname, join } from "std/path";
+import { exists } from "std/fs";
+import { lookup } from "mrmime";
 import { parse } from "xml/mod.ts";
-import { gzip } from "compress/mod.ts";
+import { zlibSync } from "fflate";
 import { Debug } from "../cli/debug.js";
 
 export class Asset {
@@ -253,7 +253,7 @@ export class Asset {
       const dirPath = dirname(fullLocalPath);
       try {
         await Deno.mkdir(dirPath, { recursive: true });
-        const data = gzip(new Uint8Array(this.data));
+        const data = zlibSync(new Uint8Array(this.data), { compression: 9});
         await Deno.writeFile(fullLocalPath, data);
       } catch (error) {
         Debug.debug("Error saving page:", error);
