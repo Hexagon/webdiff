@@ -1,15 +1,18 @@
 import { lookup } from "mrmime";
 import { colors } from "cliffy/ansi/mod.ts";
 
-import { Asset } from "./asset.js";
-import { delay } from "../utils/delay.js";
-import { Debug } from "../cli/debug.js";
-import { Summary } from "./summary.js";
-import { Robots } from "./robots.js";
-import assetQueue from "./queue.js";
-import userAgents from "./user_agents.js";
+import { Asset } from "./asset.ts";
+import { delay } from "../utils/delay.ts";
+import { Debug } from "../cli/debug.ts";
+import { Summary } from "./summary.ts";
+import { Robots } from "./robots.ts";
+import assetQueue from "./queue.ts";
+import { userAgents } from "./user_agents.ts";
 
-function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
+// Interfaces (explained later)
+import type { CliArguments } from "../cli/args.ts";
+
+function shouldEnqueue(url: URL, baseUrl: string, mimeFilter: string[], includeRegex: RegExp | null, excludeRegex: RegExp | null) {
   // Remove anchor information
   url.hash = ""; // Reset the hash (anchor) part
 
@@ -17,7 +20,7 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
   if (mimeFilter) {
     const mimeType = lookup(url.pathname);
     if (mimeType && !mimeFilter.includes(mimeType)) {
-      Debug.debugFeed("Skipping URL due to MIME type:", url.href);
+      Debug.debugFeed(`Skipping URL due to MIME type: ${url.href}`);
       return undefined; // Exclude
     }
   }
@@ -30,12 +33,12 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
 
   // Only check regex filters if they are provided
   if (includeRegex && !includeRegex.test(url.toString())) {
-    Debug.logFeed("Skipping URL: Does not match --include-url regex", url.href);
+    Debug.logFeed(`Skipping URL: Does not match --include-url regex: ${url.href}`);
     return undefined; // Exclude
   }
 
   if (excludeRegex && excludeRegex.test(url.toString())) {
-    Debug.debugFeed("Skipping URL: Matches --exclude-url regex", url.href);
+    Debug.debugFeed(`Skipping URL: Matches --exclude-url regex: ${url.href}`);
     return undefined; // Exclude
   }
 
@@ -46,7 +49,7 @@ function shouldEnqueue(url, baseUrl, mimeFilter, includeRegex, excludeRegex) {
   }
 }
 
-async function fetchRobots(targetUrl, userAgentString) {
+async function fetchRobots(targetUrl: string, userAgentString: string | undefined) {
   const robots = new Robots(targetUrl);
   try {
     await robots.fetch(userAgentString);
@@ -55,8 +58,7 @@ async function fetchRobots(targetUrl, userAgentString) {
 
     // Modify delay based on crawl-delay
     if (robots.minimumCrawlDelay !== null) {
-      delayMs = robots.minimumCrawlDelay * 1000;
-      Debug.debugFeed(`Adjusted delayMs to ${delayMs} based on robots.txt`);
+      Debug.debugFeed(`Adjusted delayMs to ${robots.minimumCrawlDelay * 1000} based on robots.txt`);
     }
 
     // Add sitemaps
@@ -65,19 +67,19 @@ async function fetchRobots(targetUrl, userAgentString) {
       assetQueue.enqueue(sitemapUrl);
     });
   } catch (error) {
-    throw new CrawlError(`Error fetching robots.txt for ${targetUrl}`, targetUrl, error);
+    throw new Error(`Error fetching robots.txt for ${targetUrl}: ${error.message}`);
   }
 }
 
 export const summary = new Summary(); // Create a summary object
 
-export async function crawl(targetUrl, args) {
+export async function crawl(targetUrl: string, args: CliArguments) {
   console.log(colors.bold("Processing queue\n"));
 
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed
-  let includeRegex = null;
-  let excludeRegex = null;
+  let includeRegex: RegExp | null = null;
+  let excludeRegex: RegExp | null = null;
   if (args["include-urls"]) {
     includeRegex = new RegExp(args["include-urls"]);
     Debug.debugFeed(`Only processing assets matching regex: ${args["include-urls"]}`);
@@ -99,7 +101,8 @@ export async function crawl(targetUrl, args) {
 
   // Resolve to the actual user agent string
   // - Already validated by args.js, no need for error handling
-  const resolvedUserAgent = userAgents[args["user-agent"]];
+  const resolvedUserAgent = userAgents[args["user-agent"]] as string | undefined;
+
   Debug.debugFeed(`User user agent string: ${resolvedUserAgent}`);
 
   if (!args["ignore-robots"]) {
@@ -112,14 +115,14 @@ export async function crawl(targetUrl, args) {
     Debug.debugFeed("Ignoring robots.txt");
   }
 
-  const mimeFilter = args["mime-filter"] ? args["mime-filter"].split(",").map((item) => item.trim()) : null;
+  const mimeFilter: string[] = args["mime-filter"] ? args["mime-filter"].split(",").map((item) => item.trim()) : [];
 
   // Process Queue
   let assetsProcessed = 0;
 
   while (assetQueue.queue.length > 0) {
     const url = assetQueue.dequeue();
-    const asset = new Asset(url, args.output);
+    const asset = new Asset(url);
 
     try {
       await asset.fetch(resolvedUserAgent);
@@ -128,7 +131,7 @@ export async function crawl(targetUrl, args) {
       asset.references.forEach((link) => {
         if (link) { // Ensure the link has an href attribute
           try {
-            const resolvedUrl = new URL(link, targetUrl); // Resolve against the current asset
+            const resolvedUrl = new URL(link as string, targetUrl); // Resolve against the current asset
             if (
               shouldEnqueue(
                 resolvedUrl,
@@ -141,7 +144,7 @@ export async function crawl(targetUrl, args) {
               assetQueue.enqueue(resolvedUrl.href);
             }
           } catch (error) {
-            Debug.debugFeed("Error processing link:", link, error);
+            Debug.debugFeed(`Error processing link ${link}:  ${error}`);
           }
         }
       });
@@ -150,7 +153,8 @@ export async function crawl(targetUrl, args) {
     } catch (error) {
       Debug.errorFeed(error);
     } finally {
-      await delay(args.delay);
+      const delayMs = parseInt(args.delay, 10);
+      await delay(delayMs);
     }
 
     Debug.logFeed(`[${assetsProcessed}/${assetsProcessed + assetQueue.queue.length}] ${url}`);

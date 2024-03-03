@@ -1,19 +1,33 @@
-import { parseArgs } from "std/cli";
-import userAgents from "../crawl/user_agents.js";
+import { Args, parseArgs } from "std/cli";
+import { userAgents } from "../crawl/user_agents.ts";
+
+export interface CliArguments extends Args {
+  port: string;
+  delay: string;
+  output: string;
+  report: string;
+  "mime-filter": string;
+  "user-agent": string;
+  "include-urls": string;
+  "exclude-urls": string;
+  "report-only": boolean;
+  "ignore-robots": boolean;
+  verbose: boolean;
+  help: boolean;
+  _: string[];
+}
 
 export function parseAndValidateArgs() {
-  const parsedArgs = parseArgs(Deno.args, {
+  const parsedArgs: CliArguments = parseArgs(Deno.args, {
     boolean: [
       "verbose",
       "report-only",
       "help",
       "ignore-robots",
     ],
-    number: [
+    string: [
       "port",
       "delay",
-    ],
-    string: [
       "output",
       "report",
       "mime-filter",
@@ -40,12 +54,15 @@ export function parseAndValidateArgs() {
   });
 
   // Validate delayMs
-  if (parsedArgs.delay <= 0) {
-    console.error("Error: Delay must be a positive number.");
+  const parsedDelay = parseInt(parsedArgs.delay, 10);
+  if (isNaN(parsedDelay) || parsedDelay <= 0 || parsedDelay >= 3600 * 1000) {
+    console.error("Error: Delay must be a positive number less than 3 600 000 (1 hour).");
     Deno.exit(1);
   }
-  if (parsedArgs.delay >= 3600 * 1000) {
-    console.error("Error: Delay must be less than 3 600 000 (1 hour).");
+
+  const parsedPort = parseInt(parsedArgs.port, 10);
+  if (isNaN(parsedPort) || parsedPort < 0 || parsedPort >= 65536) {
+    console.error("Error: Delay must be a positive number less than 65536.");
     Deno.exit(1);
   }
 

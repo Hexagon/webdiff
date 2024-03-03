@@ -1,26 +1,37 @@
-import { Debug } from "../cli/debug.js";
+import { Debug } from "../cli/debug.ts";
 
-export class Robots {
-  constructor(baseURL) {
-    this.baseURL = baseURL;
-    this.robotsUrl = new URL("/robots.txt", baseURL).toString();
+interface RobotsData {
+  allowedUrls: Set<string>;
+  sitemaps: Set<string>;
+  minimumCrawlDelay: number | null;
+}
+
+export class Robots implements RobotsData {
+  baseURL: URL; // Explicitly type baseURL
+  robotsUrl: string;
+  content: ArrayBuffer | null;
+  allowedUrls: Set<string>;
+  sitemaps: Set<string>;
+  minimumCrawlDelay: number | null;
+
+  constructor(baseURL: string) {
+    this.baseURL = new URL(baseURL);
+    this.robotsUrl = new URL("/robots.txt", this.baseURL).toString();
     this.content = null;
     this.allowedUrls = new Set();
     this.sitemaps = new Set();
     this.minimumCrawlDelay = null;
   }
 
-  async fetch(userAgent) {
+  async fetch(userAgent: string | undefined): Promise<void> {
     try {
-      const response = await fetch(this.robotsUrl, {
-        headers: {
-          "User-Agent": userAgent, // Pass the userAgent
-        },
-      });
+      const customHeaders = new Headers();
+      if (userAgent) {
+        customHeaders.append("User-Agent", userAgent);
+      }
+      const response = await fetch(this.robotsUrl, { headers: customHeaders });
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch robots.txt: ${response.status} ${response.statusText}`,
-        );
+        throw new Error(`Failed to fetch robots.txt: ${response.status} ${response.statusText}`);
       }
       this.content = await response.arrayBuffer();
       this.parse();
@@ -29,7 +40,9 @@ export class Robots {
     }
   }
 
-  parse() {
+  parse(): void {
+    if (!this.content) return; // Handle potential null value of content
+
     const textDecoder = new TextDecoder();
     const decodedContent = textDecoder.decode(this.content);
 
@@ -38,7 +51,7 @@ export class Robots {
     this.extractCrawlDelay(decodedContent);
   }
 
-  extractAllowedUrls(content) {
+  extractAllowedUrls(content: string) {
     const allowRegex = /Allow:\s*(\S+)/g;
     let match;
     while ((match = allowRegex.exec(content)) !== null) {
@@ -46,7 +59,7 @@ export class Robots {
     }
   }
 
-  extractCrawlDelay(content) {
+  extractCrawlDelay(content: string) {
     const crawlDelayRegex = /Crawl-delay:\s*(\d+)/g;
     let matchCrawlDelay;
     while ((matchCrawlDelay = crawlDelayRegex.exec(content)) !== null) {
@@ -65,7 +78,7 @@ export class Robots {
     }
   }
 
-  extractSitemaps(content) {
+  extractSitemaps(content: string) {
     const sitemapRegex = /Sitemap:\s*(\S+)/g;
     let match;
     while ((match = sitemapRegex.exec(content)) !== null) {

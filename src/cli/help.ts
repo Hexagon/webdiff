@@ -2,10 +2,11 @@ import metadata from "../../deno.json" with { type: "json" };
 
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
+import type { CliArguments } from "./args.ts";
 
 const command = "deno run -A webdiff.js";
 
-export function help(args) {
+export function help(args: CliArguments) {
   console.log(colors.bold(`${metadata.name} ${metadata.version}`));
   console.log("A cli tool for recursive web asset crawling and analysis.\n");
 
