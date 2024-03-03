@@ -10,29 +10,33 @@ import { Debug } from "./src/cli/debug.ts";
 async function main() {
   const args = parseAndValidateArgs();
 
+  // Enable verbose debugging if requested, as soon as possible
   if (args.verbose) {
     Debug.verbose();
   }
 
   // Extract action
   const action = (args._[0] ?? "").toLowerCase();
-  const file1 = (args._[1] ?? "").toLowerCase();
-  const file2 = (args._[2] ?? "").toLowerCase();
+
+  // Handle no-ops
   if (args.help || action === "help") {
     help(args);
     Deno.exit(0);
   }
 
+  const arg1 = (args._[1] ?? "").toLowerCase();
+  const arg2 = (args._[2] ?? "").toLowerCase();
+
   switch (action) {
     case "diff":
-      await diff(file1, file2);
+      await diff(arg1, arg2);
       break;
     case "serve":
       // Assume args.port is validated by args.ts
-      serve(parseInt(args.port, 10), args.output, file1 || args.report);
+      serve(parseInt(args.port, 10), args.output, arg1 || args.report);
       break;
     case "crawl":
-      await crawl(file1, args);
+      await crawl(arg1, args);
       break;
     default:
       console.error("Invalid arguments or missing action specified.");

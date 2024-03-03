@@ -4,7 +4,7 @@ import { colors } from "cliffy/ansi/mod.ts";
 import { Asset } from "./asset.ts";
 import { delay } from "../utils/delay.ts";
 import { Debug } from "../cli/debug.ts";
-import { Summary } from "./summary.ts";
+import { Report } from "./report.ts";
 import { Robots } from "./robots.ts";
 import assetQueue from "./queue.ts";
 import { userAgents } from "./user_agents.ts";
@@ -17,7 +17,7 @@ function shouldEnqueue(url: URL, baseUrl: string, mimeFilter: string[], includeR
   url.hash = ""; // Reset the hash (anchor) part
 
   // MIME Type Filtering (if the flag is provided)
-  if (mimeFilter) {
+  if (mimeFilter.length) {
     const mimeType = lookup(url.pathname);
     if (mimeType && !mimeFilter.includes(mimeType)) {
       Debug.debugFeed(`Skipping URL due to MIME type: ${url.href}`);
@@ -71,7 +71,7 @@ async function fetchRobots(targetUrl: string, userAgentString: string | undefine
   }
 }
 
-export const summary = new Summary(); // Create a summary object
+export const report = new Report(); // Create a report object
 
 export async function crawl(targetUrl: string, args: CliArguments) {
   console.log(colors.bold("Processing queue\n"));
@@ -148,8 +148,14 @@ export async function crawl(targetUrl: string, args: CliArguments) {
           }
         }
       });
-      if (!args["report-only"]) await asset.save(args.output); // Save the asset
-      summary.addAssetData(asset); // Add asset data to the summary
+
+      // Conditionally save the asset to disk
+      if (!args["report-only"]) {
+        await asset.save(args.output);
+      }
+
+      // Add to report
+      report.addAsset(asset);
     } catch (error) {
       Debug.errorFeed(error);
     } finally {
@@ -162,7 +168,7 @@ export async function crawl(targetUrl: string, args: CliArguments) {
     assetsProcessed++;
   }
 
-  await summary.generateReport(
+  await report.generate(
     args.output,
     args.report,
   );

@@ -2,6 +2,7 @@ import metadata from "../../deno.json" with { type: "json" };
 
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
+
 import type { CliArguments } from "./args.ts";
 
 const command = "deno run -A webdiff.js";

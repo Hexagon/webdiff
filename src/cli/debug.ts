@@ -1,9 +1,9 @@
 import { colors, tty } from "cliffy/ansi/mod.ts";
 
 class DebugSingleton {
-  static _instance: DebugSingleton | null = null; // Updated type
+  static _instance: DebugSingleton | null = null;
 
-  private verboseOutput = false; // Private member
+  private verboseOutput = false;
 
   constructor() {
     if (DebugSingleton._instance) {
@@ -21,11 +21,11 @@ class DebugSingleton {
     console.error(colors.red(error.message));
   }
 
-  log(status: string) { // Explicitly type 'status'
+  log(status: string) {
     console.log(status);
   }
 
-  debug(args: string) { // Explicitly type 'args'
+  debug(args: string) {
     if (this.verboseOutput) this.log(colors.gray(args));
   }
 

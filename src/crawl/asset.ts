@@ -2,7 +2,7 @@ import { DOMParser } from "linkedom";
 import { dirname, join } from "std/path";
 import { exists } from "std/fs";
 import { lookup } from "mrmime";
-import { parse } from "xml/mod.ts";
+import { XMLParser } from "fast-xml-parser";
 import { zlibSync } from "fflate";
 import { Debug } from "../cli/debug.ts";
 
@@ -297,9 +297,9 @@ export class Asset implements AssetData {
   extractAssetsFromSitemap(data: ArrayBuffer) {
     const textDecoder = new TextDecoder();
     const sitemapText = textDecoder.decode(data);
-
     try {
-      const parsedSitemap: Sitemap = parse(sitemapText) as unknown as Sitemap;
+      const parser = new XMLParser();
+      const parsedSitemap: Sitemap = parser.parse(sitemapText) as unknown as Sitemap;
       const urlSet: UrlSet = parsedSitemap.urlset;
       if (urlSet && urlSet.url) { // Narrow down the type
         urlSet.url.forEach((urlEntry) => {

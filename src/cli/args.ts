@@ -2,18 +2,18 @@ import { Args, parseArgs } from "std/cli";
 import { userAgents } from "../crawl/user_agents.ts";
 
 export interface CliArguments extends Args {
-  port: string;
-  delay: string;
-  output: string;
-  report: string;
+  "port": string;
+  "delay": string;
+  "output": string;
+  "report": string;
   "mime-filter": string;
   "user-agent": string;
   "include-urls": string;
   "exclude-urls": string;
   "report-only": boolean;
   "ignore-robots": boolean;
-  verbose: boolean;
-  help: boolean;
+  "verbose": boolean;
+  "help": boolean;
   _: string[];
 }
 

@@ -13,8 +13,8 @@ export async function serve(port: number, outputDir: string, reportFileName: str
     const assetReport = JSON.parse(await Deno.readTextFile(reportPath));
 
     // Construct a map for faster lookups
-    const urlHashMapping = new Map(assetReport.report.map((obj: AssetData) => [new URL(obj.url as string).pathname, obj.hash]));
-    const mimeMapping = new Map(assetReport.report.map((obj: AssetData) => [new URL(obj.url as string).pathname, obj.data_mime]));
+    const urlHashMapping = new Map(assetReport.assets.map((obj: AssetData) => [new URL(obj.url as string).pathname, obj.hash]));
+    const mimeMapping = new Map(assetReport.assets.map((obj: AssetData) => [new URL(obj.url as string).pathname, obj.data_mime]));
 
     const handler = async (req: Request): Promise<Response> => {
       const requestedPath = new URL(req.url).pathname; // Remove leading '/'
