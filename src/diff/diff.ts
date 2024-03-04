@@ -40,7 +40,7 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
     if (oldEntry) {
       // Entry exists in both, compare fields
       if (oldEntry.hash !== newEntry.hash) {
-        // Add lastModified in the output
+        // Add last_modified in the output
         changedEntries.push({
           change_type: "modified",
           old: oldEntry,
@@ -80,13 +80,13 @@ export async function diff(report1Path: string, report2Path: string) {
     changes.forEach((change) => {
       switch (change.change_type) {
         case "added":
-          table.push([change.new?.url, colors.green(change.change_type), change.new?.lastModified || "", "", change.new?.hash || ""]);
+          table.push([change.new?.url, colors.green(change.change_type), change.new?.last_modified || "", "", change.new?.hash || ""]);
           break;
         case "removed":
           table.push([change.old?.url, colors.red(change.change_type), "", change.old?.hash || "", ""]);
           break;
         case "modified":
-          table.push([change.new?.url, colors.yellow(change.change_type), change.new?.lastModified || "", change.new?.hash || "", change.old?.hash || ""]);
+          table.push([change.new?.url, colors.yellow(change.change_type), change.new?.last_modified || "", change.new?.hash || "", change.old?.hash || ""]);
           break;
       }
     });

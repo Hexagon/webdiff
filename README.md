@@ -8,7 +8,7 @@ changes to their own sites or those of competitors, content managers monitoring 
 - **Recursive Fetching:** Starting from one or more seed URLs, the tool fetches the web page(s) and parses them to discover links to all other reachable assets (pages, images, stylesheets, scripts)
   within the same domain.
 - **Resource Discovery:** Follows internal links within a target website (or websites) to discover and download connected assets of any type.
-- **Site summary:** Summarizes the page to a `report.json` containing lastModified, url, a hash of the content and a list of all references (urls) for every discovered asset on the page.
+- **Site summary:** Summarizes the page to a `report.json` containing last-modified, url, a hash of the content and a list of all references (urls) for every discovered asset on the page.
 - **Sitemap and robots.txt Parsing:** Can parse `sitemap.xml` and `robots.txt` to assist in the discovery of assets.
 - **Report Generation:** Creates analyzed reports for understanding differences between fetched assets.
 - **Mime filtering:** Can filter on only interesting mime types to reduce traffic.

@@ -10,7 +10,7 @@ export interface AssetData {
   url: string | undefined;
   data_mime: string | null;
   references: Set<string>;
-  lastModified: string | null;
+  last_modified: string | null;
   hash: string | null;
 }
 
@@ -54,7 +54,7 @@ export class Asset implements AssetData {
   /* From AssetData */
   url: string | undefined;
   data_mime: string | null;
-  lastModified: string | null;
+  last_modified: string | null;
   hash: string | null;
   references: Set<string>;
 
@@ -70,7 +70,7 @@ export class Asset implements AssetData {
     this.ok = false; // Successful request with status >= 200 and < 300
     this.data = null;
     this.data_mime = null;
-    this.lastModified = null; // Date representation of last modification
+    this.last_modified = null; // Date representation of last modification
     this.hash = null; // Hash of the asset content
 
     /* Found references to other assets */
@@ -139,7 +139,7 @@ export class Asset implements AssetData {
           // Extract last modified
           const lastModifiedHeader = response.headers.get("Last-Modified");
           if (lastModifiedHeader) {
-            this.lastModified = new Date(lastModifiedHeader).toISOString();
+            this.last_modified = new Date(lastModifiedHeader).toISOString();
           }
 
           // Calculate hash
@@ -195,9 +195,9 @@ export class Asset implements AssetData {
       const document = new DOMParser().parseFromString(textData, "text/html");
       this.extractHtmlAssets(document);
 
-      // Amend lastModified using HTML values
-      if (!this.lastModified) {
-        this.extractHtmlLastModified(document);
+      // Amend last_modified using HTML values
+      if (!this.last_modified) {
+        this.extractHtmllast_modified(document);
       }
     } else if (this.data_mime.endsWith("xml")) { // Assuming sitemaps are XML
       if (this.url !== undefined && this.url.endsWith("sitemap.xml")) {
@@ -245,9 +245,9 @@ export class Asset implements AssetData {
     );
   }
 
-  extractHtmlLastModified(document: HTMLDocument) {
-    const lastModifiedMeta = document.querySelector(
-      'meta[name="last-modified"]',
+  extractHtmllast_modified(document: HTMLDocument) {
+    const last_modifiedMeta = document.querySelector(
+      'meta[name="last_modified"]',
     );
     const articleModifiedMeta = document.querySelector(
       'meta[name="article:modified"]',
@@ -255,24 +255,24 @@ export class Asset implements AssetData {
     const articlePublishedMeta = document.querySelector(
       'meta[name="article:published"]',
     );
-    if (lastModifiedMeta) {
-      const dateString = lastModifiedMeta.getAttribute("content");
+    if (last_modifiedMeta) {
+      const dateString = last_modifiedMeta.getAttribute("content");
       if (dateString) {
         try {
-          this.lastModified = new Date(dateString).toISOString();
-          if (this.lastModified) {
-            Debug.debug("Successfully extracted lastModified from HTML.");
+          this.last_modified = new Date(dateString).toISOString();
+          if (this.last_modified) {
+            Debug.debug("Successfully extracted last_modified from HTML.");
           }
         } catch (_error) {
-          // Ignore console.error("Error parsing last-modified meta tag:", error);
+          // Ignore console.error("Error parsing last_modified meta tag:", error);
         }
       }
     } else if (articleModifiedMeta) {
       const dateString = articleModifiedMeta.getAttribute("content");
       if (dateString) {
         try {
-          this.lastModified = new Date(dateString).toISOString();
-          if (this.lastModified) {
+          this.last_modified = new Date(dateString).toISOString();
+          if (this.last_modified) {
             Debug.debug("Successfully extracted article:modified meta from HTML.");
           }
         } catch (_error) {
@@ -283,8 +283,8 @@ export class Asset implements AssetData {
       const dateString = articlePublishedMeta.getAttribute("content");
       if (dateString) {
         try {
-          this.lastModified = new Date(dateString).toISOString();
-          if (this.lastModified) {
+          this.last_modified = new Date(dateString).toISOString();
+          if (this.last_modified) {
             Debug.debug("Successfully extracted article:published meta from HTML.");
           }
         } catch (_error) {

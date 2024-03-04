@@ -1,3 +1,5 @@
+import metadata from "../../deno.json" with { type: "json" };
+
 import { lookup } from "mrmime";
 import { colors } from "cliffy/ansi/mod.ts";
 
@@ -71,7 +73,7 @@ async function fetchRobots(targetUrl: string, userAgentString: string | undefine
   }
 }
 
-export const report = new Report(); // Create a report object
+export const report = new Report(metadata.version); // Create a report object
 
 export async function crawl(targetUrl: string, args: CliArguments) {
   console.log(colors.bold("Processing queue\n"));

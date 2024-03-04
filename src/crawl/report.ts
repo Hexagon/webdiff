@@ -5,6 +5,7 @@ import type { AssetData } from "./asset.ts";
 interface ReportMeta {
   started: string; // ISO Date
   finished?: string; // ISO Date
+  version: string; // Application version
 }
 
 export interface ReportData {
@@ -15,11 +16,12 @@ export interface ReportData {
 export class Report {
   data: ReportData;
 
-  constructor() {
+  constructor(version: string) {
     this.data = {
       assets: [],
       meta: {
         started: new Date().toISOString(),
+        version: version,
       },
     };
   }
@@ -27,7 +29,7 @@ export class Report {
   addAsset(asset: Asset) {
     this.data.assets.push({
       url: asset.url as string,
-      lastModified: asset.lastModified,
+      last_modified: asset.last_modified,
       data_mime: asset.data_mime,
       hash: asset.hash,
       references: asset.references,
