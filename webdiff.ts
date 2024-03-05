@@ -29,7 +29,7 @@ async function main() {
 
   switch (action) {
     case "diff":
-      await diff(arg1, arg2);
+      await diff(arg1, arg2, args.verbose, args.output);
       break;
     case "serve":
       // Assume args.port is validated by args.ts

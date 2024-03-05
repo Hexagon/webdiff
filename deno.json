@@ -15,6 +15,7 @@
     "fast-xml-parser": "npm:fast-xml-parser@4.3.5",
     "linkedom": "npm:linkedom@0.16.8",
     "fflate": "npm:fflate@0.8.2",
+    "diff": "npm:diff@5.2.0",
     "cliffy/": "https://deno.land/x/cliffy@v1.0.0-rc.3/"
   }
 }

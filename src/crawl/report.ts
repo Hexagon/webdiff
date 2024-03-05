@@ -1,6 +1,5 @@
 import { dirname, join } from "std/path";
 import { Asset } from "./asset.ts";
-import type { AssetData } from "./asset.ts";
 
 interface ReportMeta {
   started: string; // ISO Date
@@ -8,9 +7,18 @@ interface ReportMeta {
   version: string; // Application version
 }
 
+export interface AssetReportData {
+  url: string | undefined;
+  data_mime: string | null;
+  charset: string | null;
+  last_modified: string | null;
+  hash: string | null;
+  references: string[]; // References is string[] instead of Set
+}
+
 export interface ReportData {
   meta: ReportMeta;
-  assets: AssetData[];
+  assets: AssetReportData[];
 }
 
 export class Report {
@@ -31,8 +39,9 @@ export class Report {
       url: asset.url as string,
       last_modified: asset.last_modified,
       data_mime: asset.data_mime,
+      charset: asset.charset,
       hash: asset.hash,
-      references: asset.references,
+      references: Array.from(asset.references),
     });
   }
 

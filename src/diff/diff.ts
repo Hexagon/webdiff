@@ -3,6 +3,9 @@ import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
 import { AssetData } from "../crawl/asset.ts";
 import { ReportData } from "../crawl/report.ts";
+import { createTwoFilesPatch } from "diff";
+import { unzlibSync } from "fflate";
+import { join } from "std/path";
 
 interface ChangedAssetData {
   change_type: "removed" | "added" | "modified";
@@ -69,24 +72,33 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
   return changedEntries;
 }
 
-export async function diff(report1Path: string, report2Path: string) {
+export async function diff(report1Path: string, report2Path: string, verbose: boolean, outputDir: string) {
   try {
     const changes = await compareJSONFiles(report1Path, report2Path);
 
     // Create a table for structured output
     const table = new Table()
-      .header([colors.bold("URL"), colors.bold("Change Type"), colors.bold("Last Modified"), colors.bold("Old hash"), colors.bold("New hash")]);
+      .header([colors.bold("URL"), colors.bold("Change Type"), colors.bold("Last Modified")]);
 
-    changes.forEach((change) => {
+    changes.forEach(async (change) => {
       switch (change.change_type) {
         case "added":
-          table.push([change.new?.url, colors.green(change.change_type), change.new?.last_modified || "", "", change.new?.hash || ""]);
+          table.push([change.new?.url, colors.green(change.change_type), change.new?.last_modified || ""]);
           break;
         case "removed":
-          table.push([change.old?.url, colors.red(change.change_type), "", change.old?.hash || "", ""]);
+          table.push([change.old?.url, colors.red(change.change_type), ""]);
           break;
         case "modified":
-          table.push([change.new?.url, colors.yellow(change.change_type), change.new?.last_modified || "", change.new?.hash || "", change.old?.hash || ""]);
+          table.push([change.new?.url, colors.yellow(change.change_type), change.new?.last_modified || ""]);
+          if (verbose && change.new && change.old) {
+            const assetDir = join(outputDir, "assets");
+            const file1Path = `${assetDir}/${change.new.hash}`;
+            const file2Path = `${assetDir}/${change.old.hash}`;
+            const file1 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file1Path)));
+            const file2 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file2Path)));
+            const _patch = createTwoFilesPatch(file1Path, file2Path, file1, file2);
+            // ToDo: print
+          }
           break;
       }
     });

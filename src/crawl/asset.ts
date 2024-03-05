@@ -9,6 +9,7 @@ import { Debug } from "../cli/debug.ts";
 export interface AssetData {
   url: string | undefined;
   data_mime: string | null;
+  charset: string | null;
   references: Set<string>;
   last_modified: string | null;
   hash: string | null;
@@ -43,6 +44,31 @@ interface UrlEntry {
   loc: string;
 }
 
+interface ContentType {
+  mediaType: string;
+  charset?: string; // Optional charset property
+}
+
+function extractContentType(contentTypeHeader: string): ContentType {
+  const contentTypeParts = contentTypeHeader.split(";");
+  const mediaType = contentTypeParts[0].trim();
+
+  let charset: string | undefined; // Initialize charset as optional
+  const charsetMatch = contentTypeParts.slice(1).find((part) => {
+    const trimmedPart = part.trim();
+    return trimmedPart.toLowerCase().startsWith("charset=");
+  });
+
+  if (charsetMatch) {
+    charset = charsetMatch.split("=")[1].trim();
+  }
+
+  return {
+    mediaType,
+    charset,
+  };
+}
+
 export class Asset implements AssetData {
   /* Own */
   ok: boolean;
@@ -54,6 +80,7 @@ export class Asset implements AssetData {
   /* From AssetData */
   url: string | undefined;
   data_mime: string | null;
+  charset: string | null;
   last_modified: string | null;
   hash: string | null;
   references: Set<string>;
@@ -70,6 +97,7 @@ export class Asset implements AssetData {
     this.ok = false; // Successful request with status >= 200 and < 300
     this.data = null;
     this.data_mime = null;
+    this.charset = null;
     this.last_modified = null; // Date representation of last modification
     this.hash = null; // Hash of the asset content
 
@@ -124,7 +152,16 @@ export class Asset implements AssetData {
           }
 
           this.data = await response.arrayBuffer();
-          this.data_mime = response.headers.get("content-type");
+
+          const contentTypeHeader = response.headers.get("content-type");
+          if (contentTypeHeader) { // Ensure header exists
+            const { mediaType, charset } = extractContentType(contentTypeHeader);
+            this.data_mime = mediaType;
+            // Use the charset if it was found:
+            if (charset) {
+              this.charset = charset;
+            }
+          }
 
           // Guess mime type if needed
           if (!this.data_mime) {
@@ -246,17 +283,17 @@ export class Asset implements AssetData {
   }
 
   extractHtmllast_modified(document: HTMLDocument) {
-    const last_modifiedMeta = document.querySelector(
-      'meta[name="last_modified"]',
+    const lastModifiedMeta = document.querySelector(
+      'meta[name="last-modified"]',
     );
     const articleModifiedMeta = document.querySelector(
-      'meta[name="article:modified"]',
+      'meta[property="article:modified_time"]',
     );
     const articlePublishedMeta = document.querySelector(
-      'meta[name="article:published"]',
+      'meta[property="article:published_time"]',
     );
-    if (last_modifiedMeta) {
-      const dateString = last_modifiedMeta.getAttribute("content");
+    if (lastModifiedMeta) {
+      const dateString = lastModifiedMeta.getAttribute("content");
       if (dateString) {
         try {
           this.last_modified = new Date(dateString).toISOString();
@@ -273,7 +310,7 @@ export class Asset implements AssetData {
         try {
           this.last_modified = new Date(dateString).toISOString();
           if (this.last_modified) {
-            Debug.debug("Successfully extracted article:modified meta from HTML.");
+            Debug.debug("Successfully extracted article:modified_time meta from HTML.");
           }
         } catch (_error) {
           // Ignore console.error("Error parsing article:modified meta tag:", error);
