@@ -1,16 +1,15 @@
 import { exists } from "std/fs";
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
-import { AssetData } from "../crawl/asset.ts";
-import { ReportData } from "../crawl/report.ts";
+import { AssetReportData, ReportData } from "../crawl/report.ts";
 import { createTwoFilesPatch } from "diff";
 import { unzlibSync } from "fflate";
 import { join } from "std/path";
 
 interface ChangedAssetData {
   change_type: "removed" | "added" | "modified";
-  old?: AssetData;
-  new?: AssetData;
+  old?: AssetReportData;
+  new?: AssetReportData;
 }
 
 // Run diff
@@ -31,14 +30,14 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
 
   // Create dictionaries for faster lookups
   const file1Lookup = new Map();
-  file1Data.assets.forEach((entry: AssetData) => file1Lookup.set(entry.url as string, entry));
+  file1Data.assets.forEach((entry: AssetReportData) => file1Lookup.set(entry.url as string, entry));
 
   const file2Lookup = new Map();
-  file2Data.assets.forEach((entry: AssetData) => file2Lookup.set(entry.url as string, entry));
+  file2Data.assets.forEach((entry: AssetReportData) => file2Lookup.set(entry.url as string, entry));
 
   // Identify changes
   const changedEntries: ChangedAssetData[] = [];
-  file2Data.assets.forEach((newEntry: AssetData) => {
+  file2Data.assets.forEach((newEntry: AssetReportData) => {
     const oldEntry = file1Lookup.get(newEntry.url as string);
     if (oldEntry) {
       // Entry exists in both, compare fields
@@ -60,7 +59,7 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
   });
 
   // Detect deleted entries
-  file1Data.assets.forEach((oldEntry: AssetData) => {
+  file1Data.assets.forEach((oldEntry: AssetReportData) => {
     if (!file2Lookup.has(oldEntry.url)) {
       changedEntries.push({
         change_type: "removed",
