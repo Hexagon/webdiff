@@ -79,7 +79,7 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
     const table = new Table()
       .header([colors.bold("URL"), colors.bold("Change Type"), colors.bold("Last Modified")]);
 
-    changes.forEach(async (change) => {
+    for (const change of changes) {
       switch (change.change_type) {
         case "added":
           table.push([change.new?.url, colors.green(change.change_type), change.new?.last_modified || ""]);
@@ -95,12 +95,12 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
             const file2Path = `${assetDir}/${change.old.hash}`;
             const file1 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file1Path)));
             const file2 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file2Path)));
-            const _patch = createTwoFilesPatch(file1Path, file2Path, file1, file2);
-            // ToDo: print
+            const patch = createTwoFilesPatch(file1Path, file2Path, file1, file2);
+            table.push([patch]);
           }
           break;
       }
-    });
+    }
     console.log(table.toString());
   } catch (error) {
     console.error("Error comparing reports:", error);
