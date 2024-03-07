@@ -47,6 +47,8 @@ changes to their own sites or those of competitors, content managers monitoring 
      - `--user-agent` Use a specific user agent string, one of `chrome`, `firefox`, `webdiff` or `none`. (default: `webdiff`)
      - `--ignore-robots` Ignore directives of `robots.txt` even if found on server.
 
+  Webdiff will by default store `report.json` in the current directory, and a compressed version of each downloaded asset in `assets/<hash>`.
+
 ## Example
 
 ```bash
@@ -66,6 +68,14 @@ webdiff diff report-1.json report-2.json
 **Understanding the Output**
 
 The diff command will output differences it finds between the two reports, specifically added, removed or changed urls along with the last-updated date (if found).
+
+**Browsing a archived version of a website**
+
+```bash
+webdiff serve report-1.json
+```
+
+This will serve all downloaded assets from the specified report at `https://localhost:8080`, be aware that any external links or assets will be used from the internet. Any relative assets will be served from the local webserver.
 
 ## Contributions
 
