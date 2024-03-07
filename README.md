@@ -22,11 +22,13 @@ changes to their own sites or those of competitors, content managers monitoring 
 1. **Install webdiff:**
 
    ```bash
-   deno install -A -n webdiff jsr:@hexagon/webdiff
+   deno install -A -n webdiff https://raw.githubusercontent.com/hexagon/webdiff/main/webdiff.ts
    ```
 
    - `-A` grants all permissions to the program.
    - `-n webdiff` forces the installed command to be named `webdiff`.
+
+   Add `-f` to upgrade a previous install.
 
 2. **Run webdiff:**
    ```bash

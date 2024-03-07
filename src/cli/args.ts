@@ -1,3 +1,5 @@
+import { exit } from "@cross/utils";
+
 import { Args, parseArgs } from "std/cli";
 import { userAgents } from "../crawl/user_agents.ts";
 
@@ -57,13 +59,13 @@ export function parseAndValidateArgs() {
   const parsedDelay = parseInt(parsedArgs.delay, 10);
   if (isNaN(parsedDelay) || parsedDelay <= 0 || parsedDelay >= 3600 * 1000) {
     console.error("Error: Delay must be a positive number less than 3 600 000 (1 hour).");
-    Deno.exit(1);
+    exit(1);
   }
 
   const parsedPort = parseInt(parsedArgs.port, 10);
   if (isNaN(parsedPort) || parsedPort < 0 || parsedPort >= 65536) {
     console.error("Error: Delay must be a positive number less than 65536.");
-    Deno.exit(1);
+    exit(1);
   }
 
   // Validate user agent string
@@ -71,7 +73,7 @@ export function parseAndValidateArgs() {
     console.error(
       `Error: Invalid user-agent. Valid options are: ${Object.keys(userAgents).join(", ")}`,
     );
-    Deno.exit(1);
+    exit(1);
   }
 
   // Validate regexes for inclusion or exclusion
@@ -80,7 +82,7 @@ export function parseAndValidateArgs() {
       new RegExp(parsedArgs["include-urls"]);
     } catch (error) {
       console.error("Invalid --include-url regex:" + parsedArgs["include-urls"], error);
-      Deno.exit(1);
+      exit(1);
     }
   }
   if (parsedArgs["exclude-urls"]) {
@@ -88,7 +90,7 @@ export function parseAndValidateArgs() {
       new RegExp(parsedArgs["exclude-urls"]);
     } catch (error) {
       console.error("Invalid --exclude-url regex:" + parsedArgs["include-urls"], error);
-      Deno.exit(1);
+      exit(1);
     }
   }
 

@@ -1,3 +1,5 @@
+import { exit } from "@cross/utils";
+
 import { parseAndValidateArgs } from "./src/cli/args.ts";
 
 import { help } from "./src/cli/help.ts";
@@ -21,7 +23,7 @@ async function main() {
   // Handle no-ops
   if (args.help || action === "help") {
     help(args);
-    Deno.exit(0);
+    exit(0);
   }
 
   const arg1 = (args._[1] ?? "").toLowerCase();
@@ -40,7 +42,7 @@ async function main() {
       break;
     default:
       console.error("Invalid arguments or missing action specified.");
-      Deno.exit(1);
+      exit(1);
   }
 }
 

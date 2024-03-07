@@ -1,6 +1,7 @@
 import { unzlibSync } from "fflate";
 import { colors } from "cliffy/ansi/mod.ts";
 import { join } from "std/path";
+import { readFile } from "node:fs/promises";
 
 import type { AssetData } from "../crawl/asset.ts";
 
@@ -10,7 +11,8 @@ export async function serve(port: number, outputDir: string, reportFileName: str
     const reportPath = join(outputDir, reportFileName);
 
     // Sample input data (replace with your actual data)
-    const assetReport = JSON.parse(await Deno.readTextFile(reportPath));
+    const assetReportData = await readFile(reportPath);
+    const assetReport = JSON.parse(new TextDecoder().decode(assetReportData));
 
     // Construct a map for faster lookups
     const urlHashMapping = new Map(assetReport.assets.map((obj: AssetData) => [new URL(obj.url as string).pathname, obj.hash]));
@@ -27,7 +29,7 @@ export async function serve(port: number, outputDir: string, reportFileName: str
       try {
         // Try to read the asset
         const filePath = `${assetDir}/${fileHash}`;
-        const file = unzlibSync(await Deno.readFile(filePath));
+        const file = unzlibSync(await readFile(filePath));
         const mimeType = mimeMapping.get(requestedPath) as string || "application/octet-stream";
         const status = 200;
         const headers = new Headers();

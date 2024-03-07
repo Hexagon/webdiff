@@ -5,6 +5,7 @@ import { lookup } from "mrmime";
 import { XMLParser } from "fast-xml-parser";
 import { zlibSync } from "fflate";
 import { Debug } from "../cli/debug.ts";
+import { mkdir, writeFile } from "node:fs/promises";
 
 export interface AssetData {
   url: string | undefined;
@@ -367,9 +368,9 @@ export class Asset implements AssetData {
     }
     if (this.ok) {
       const dirPath = dirname(fullLocalPath);
-      await Deno.mkdir(dirPath, { recursive: true });
+      await mkdir(dirPath, { recursive: true });
       const data = zlibSync(new Uint8Array(this.data));
-      await Deno.writeFile(fullLocalPath, data);
+      await writeFile(fullLocalPath, data);
     }
   }
 }

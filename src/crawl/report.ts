@@ -1,5 +1,6 @@
 import { dirname, join } from "std/path";
 import { Asset } from "./asset.ts";
+import { mkdir, writeFile } from "node:fs/promises";
 
 interface ReportMeta {
   started: string; // ISO Date
@@ -52,8 +53,8 @@ export class Report {
       const filePath = join(outputDirectory, fileName);
       const dirPath = dirname(filePath);
       try {
-        await Deno.mkdir(dirPath, { recursive: true });
-        await Deno.writeFile(filePath, new TextEncoder().encode(reportString));
+        await mkdir(dirPath, { recursive: true });
+        await writeFile(filePath, new TextEncoder().encode(reportString));
         console.log(`Report saved to: ${filePath}`);
       } catch (error) {
         console.error(`Error saving report: ${error}`);

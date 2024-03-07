@@ -1,3 +1,5 @@
+import { exit } from "@cross/utils";
+
 import metadata from "../../deno.json" with { type: "json" };
 
 import { lookup } from "mrmime";
@@ -95,7 +97,7 @@ export async function crawl(targetUrl: string, args: CliArguments) {
     new URL(targetUrl); // Validate each URL individually
   } catch (_error) {
     console.error(`Error: Invalid target URL: ${targetUrl}`);
-    Deno.exit(1);
+    exit(1);
   }
 
   // Enqueue the target url

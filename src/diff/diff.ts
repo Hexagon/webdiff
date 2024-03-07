@@ -1,3 +1,4 @@
+import { exit } from "@cross/utils";
 import { exists } from "std/fs";
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
@@ -5,6 +6,7 @@ import { AssetReportData, ReportData } from "../crawl/report.ts";
 import { createTwoFilesPatch } from "diff";
 import { unzlibSync } from "fflate";
 import { join } from "std/path";
+import { readFile } from "node:fs/promises";
 
 interface ChangedAssetData {
   change_type: "removed" | "added" | "modified";
@@ -25,19 +27,23 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
   }
 
   // Load JSON data
-  const file1Data: ReportData = JSON.parse(await Deno.readTextFile(file1Path));
-  const file2Data: ReportData = JSON.parse(await Deno.readTextFile(file2Path));
+  const file1Data = await readFile(file1Path);
+  const file2Data = await readFile(file2Path);
+  const file1Text = new TextDecoder().decode(file1Data);
+  const file2Text = new TextDecoder().decode(file2Data);
+  const file1Object: ReportData = JSON.parse(file1Text);
+  const file2Object: ReportData = JSON.parse(file2Text);
 
   // Create dictionaries for faster lookups
   const file1Lookup = new Map();
-  file1Data.assets.forEach((entry: AssetReportData) => file1Lookup.set(entry.url as string, entry));
+  file1Object.assets.forEach((entry: AssetReportData) => file1Lookup.set(entry.url as string, entry));
 
   const file2Lookup = new Map();
-  file2Data.assets.forEach((entry: AssetReportData) => file2Lookup.set(entry.url as string, entry));
+  file2Object.assets.forEach((entry: AssetReportData) => file2Lookup.set(entry.url as string, entry));
 
   // Identify changes
   const changedEntries: ChangedAssetData[] = [];
-  file2Data.assets.forEach((newEntry: AssetReportData) => {
+  file2Object.assets.forEach((newEntry: AssetReportData) => {
     const oldEntry = file1Lookup.get(newEntry.url as string);
     if (oldEntry) {
       // Entry exists in both, compare fields
@@ -59,7 +65,7 @@ async function compareJSONFiles(file1Path: string, file2Path: string): Promise<C
   });
 
   // Detect deleted entries
-  file1Data.assets.forEach((oldEntry: AssetReportData) => {
+  file1Object.assets.forEach((oldEntry: AssetReportData) => {
     if (!file2Lookup.has(oldEntry.url)) {
       changedEntries.push({
         change_type: "removed",
@@ -93,8 +99,8 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
             const assetDir = join(outputDir, "assets");
             const file1Path = `${assetDir}/${change.new.hash}`;
             const file2Path = `${assetDir}/${change.old.hash}`;
-            const file1 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file1Path)));
-            const file2 = new TextDecoder().decode(unzlibSync(await Deno.readFile(file2Path)));
+            const file1 = new TextDecoder().decode(unzlibSync(await readFile(file1Path)));
+            const file2 = new TextDecoder().decode(unzlibSync(await readFile(file2Path)));
             const patch = createTwoFilesPatch(file1Path, file2Path, file1, file2);
             table.push([patch]);
           }
@@ -104,6 +110,6 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
     console.log(table.toString());
   } catch (error) {
     console.error("Error comparing reports:", error);
-    Deno.exit(1);
+    exit(1);
   }
 }
