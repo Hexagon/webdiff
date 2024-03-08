@@ -25,12 +25,16 @@ changes to their own sites or those of competitors, content managers monitoring 
    deno install -A -n webdiff --import-map https://raw.githubusercontent.com/hexagon/webdiff/main/import_map.json https://raw.githubusercontent.com/hexagon/webdiff/main/webdiff.ts
    ```
 
-   - `-A` grants all permissions to the program.
-   - `-n webdiff` forces the installed command to be named `webdiff`.
+Explanation of the flags:
 
-   Add `-f` to upgrade a previous install.
+- `-A` grants all permissions to the program.
+- `-n webdiff` forces the installed command to be named `webdiff`.
+- `--import-map https://raw.githubusercontent.com/hexagon/webdiff/main/import_map.json` point out the import map specifying all dependencies.
+
+Optionally add `-f` to overwrite (upgrade) a previous install.
 
 2. **Run webdiff:**
+
    ```bash
    webdiff crawl <target_url>
    webdiff diff [--verbose] <report-1> <report-2>
