@@ -1,10 +1,13 @@
+import { exit } from "@cross/utils";
+
 import { dirname, join } from "std/path";
 import { Asset } from "./asset.ts";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import assetQueue from "./queue.ts";
 import { Debug } from "../cli/debug.ts";
 
 interface ReportMeta {
+  url?: string; // Target url
   started: string; // ISO Date
   finished?: string; // ISO Date
   queue?: string[]; // Queue left
@@ -33,9 +36,13 @@ export class Report {
       assets: [],
       meta: {
         started: new Date().toISOString(),
-        version: version,
+        version,
       },
     };
+  }
+
+  setUrl(url: string) {
+    this.data.meta.url = url;
   }
 
   addAsset(asset: Asset) {
@@ -53,7 +60,7 @@ export class Report {
     if (assetQueue.queue.length === 0) {
       this.data.meta.finished = new Date().toISOString();
     } else {
-      if (assetQueue.queue.length > 0) { this.data.meta.queue = assetQueue.queue};
+      if (assetQueue.queue.length > 0) this.data.meta.queue = assetQueue.queue;
     }
     const reportString = JSON.stringify(this.data, null, 2);
     if (outputDirectory) {
@@ -72,11 +79,14 @@ export class Report {
   async resume(outputDirectory: string, fileName: string) {
     try {
       const reportFilePath = join(outputDirectory, fileName);
-      const fileData = await readFile(reportFilePath, { encoding: 'utf8' });
+      const fileData = await readFile(reportFilePath, { encoding: "utf8" });
       const reportData: ReportData = JSON.parse(fileData);
-      
+
       // Overwrite start date
       this.data.meta.started = reportData.meta.started;
+
+      // Overwrite target url
+      this.data.meta.url = reportData.meta.url;
 
       // Reconstruct all assets
       reportData.assets.forEach((assetData) => {
@@ -85,19 +95,20 @@ export class Report {
         asset.charset = assetData.charset;
         asset.last_modified = assetData.last_modified;
         asset.hash = assetData.hash;
-   
+
         // Add references to the Set
-        assetData.references.forEach(ref => asset.references.add(ref)); 
+        assetData.references.forEach((ref) => asset.references.add(ref));
 
         this.addAsset(asset);
       });
 
       // Feed queue
-      reportData.meta.queue?.forEach(entry => assetQueue.enqueue(entry)); 
+      reportData.meta.queue?.forEach((entry) => assetQueue.enqueue(entry));
 
-      console.log("Assets from report loaded into the queue.");
+      Debug.log("Assets from report loaded into the queue.");
     } catch (error) {
-      console.error(`Error loading report for resume: ${error}`);
+      Debug.log(`Error loading report for resume: ${error}`);
+      exit(1);
     }
   }
 }

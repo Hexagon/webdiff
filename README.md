@@ -36,7 +36,8 @@ Optionally add `-f` to overwrite (upgrade) a previous install.
 2. **Run webdiff:**
 
    ```bash
-   webdiff crawl <target_url>
+   webdiff crawl [options] <target_url>
+   webdiff resume [options] <target_url>
    webdiff diff [--verbose] <report-1> <report-2>
    webdiff serve <report>
    ```
@@ -61,7 +62,15 @@ Webdiff will by default store `report-<timestamp>.json` in the current directory
 webdiff crawl https://56k.guru
 ```
 
-This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created.
+This will crawl `https://56k.guru`, and download all assets into the specified output directory. A `report.json` will also be created. The report will be autosaved every minute.
+
+**Resuming an aborted crawl**
+
+```bash
+webdiff resume report-filename.json
+```
+
+This will resume crawling of `https://56k.guru`, not that the same options that were passed to `crawl` should be passed to `resume`, as the report doesn't keep track of options.
 
 **Comparing Fetched Versions**
 

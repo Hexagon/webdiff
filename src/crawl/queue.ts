@@ -30,7 +30,7 @@ const assetQueue: AssetQueue = {
 
   set(queue: string[]) {
     this.queue = queue;
-  }
+  },
 };
 
 export default assetQueue;

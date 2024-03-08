@@ -13,9 +13,10 @@ export function help(args: CliArguments) {
 
   console.log(colors.bold("Usage\n"));
 
+  console.log(colors.green(`  ${command} crawl [options] [<target_url>] \n`));
+  console.log(colors.green(`  ${command} resume [options] <report>`));
   console.log(colors.green(`  ${command} serve <report>`));
   console.log(colors.green(`  ${command} diff <report1> <report2>`));
-  console.log(colors.green(`  ${command} crawl [<target_url>] [options]\n`));
 
   const table = new Table()
     .header([colors.bold("Option"), colors.bold("Description"), colors.bold("Default")]);

@@ -100,13 +100,26 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
       args.output,
       targetUrl,
     );
+    if (!report.data.meta.url) {
+      Debug.logFeed("Unexpected error: Target URL missing in report. Can not resume.");
+      exit(1);
+    } else {
+      targetUrl = report.data.meta.url;
+    }
+    if (report.data.meta.finished || assetQueue.queue.length === 0) {
+      Debug.logFeed(`Nothing to do, can not resume ${args.report}.`);
+      exit(1);
+    } else {
+      Debug.logFeed("Resuming crawling of ${args.report}.");
+    }
   } else {
     try {
       new URL(targetUrl); // Validate each URL individually
     } catch (_error) {
       console.error(`Error: Invalid target URL: ${targetUrl}`);
       exit(1);
-    }  
+    }
+    report.setUrl(targetUrl);
     // Enqueue the target url
     assetQueue.enqueue(targetUrl);
   }
@@ -170,7 +183,7 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
       report.addAsset(asset);
 
       // Save the unfinishedreport if more than x ms has passed
-      if (new Date().getTime() - lastSave > 5000) {
+      if (new Date().getTime() - lastSave > 60000) {
         lastSave = new Date().getTime();
         Debug.logFeed("Autosaving progress");
         await report.generate(
@@ -178,7 +191,6 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
           args.report,
         );
       }
-
     } catch (error) {
       Debug.errorFeed(error);
     } finally {
