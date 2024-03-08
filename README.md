@@ -22,7 +22,7 @@ changes to their own sites or those of competitors, content managers monitoring 
 1. **Install webdiff:**
 
    ```bash
-   deno install -A -n webdiff https://raw.githubusercontent.com/hexagon/webdiff/main/webdiff.ts
+   deno install -A -n webdiff --import-map https://raw.githubusercontent.com/hexagon/webdiff/main/import_map.json https://raw.githubusercontent.com/hexagon/webdiff/main/webdiff.ts
    ```
 
    - `-A` grants all permissions to the program.

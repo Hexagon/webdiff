@@ -135,3 +135,6 @@ report-*.json
 
 # Deno files
 deno.lock
+
+LOCAL.md
+local

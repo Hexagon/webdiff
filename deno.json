@@ -7,16 +7,5 @@
     "lineWidth": 200
   },
 
-  "imports": {
-    "@cross/utils": "jsr:@cross/utils@^0.0.1",
-    "cliffy/": "https://deno.land/x/cliffy@v1.0.0-rc.3/",
-    "diff": "npm:diff@5.2.0",
-    "fast-xml-parser": "npm:fast-xml-parser@4.3.5",
-    "fflate": "npm:fflate@0.8.2",
-    "linkedom": "npm:linkedom@0.16.8",
-    "mrmime": "npm:mrmime@2.0.0",
-    "std/cli": "jsr:@std/cli@0.218.2",
-    "std/fs": "jsr:@std/fs@0.218.2",
-    "std/path": "jsr:@std/path@0.218.2"
-  }
+  "importMap": "import_map.json"
 }
