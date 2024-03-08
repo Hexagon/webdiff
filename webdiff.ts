@@ -37,6 +37,9 @@ async function main() {
       // Assume args.port is validated by args.ts
       serve(parseInt(args.port, 10), args.output, arg1 || args.report);
       break;
+    case "resume":
+      await crawl(arg1, args, true);
+      break;
     case "crawl":
       await crawl(arg1, args);
       break;

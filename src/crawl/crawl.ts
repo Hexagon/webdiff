@@ -77,7 +77,7 @@ async function fetchRobots(targetUrl: string, userAgentString: string | undefine
 
 export const report = new Report(metadata.version); // Create a report object
 
-export async function crawl(targetUrl: string, args: CliArguments) {
+export async function crawl(targetUrl: string, args: CliArguments, resume?: boolean) {
   console.log(colors.bold("Processing queue\n"));
 
   // Handle regexes for inclusion or exclusion
@@ -93,15 +93,23 @@ export async function crawl(targetUrl: string, args: CliArguments) {
     Debug.debugFeed("Ignoring assets matching regex: " + args["exclude-urls"]);
   }
 
-  try {
-    new URL(targetUrl); // Validate each URL individually
-  } catch (_error) {
-    console.error(`Error: Invalid target URL: ${targetUrl}`);
-    exit(1);
+  // Resume or start?
+  if (resume) {
+    args.report = targetUrl;
+    await report.resume(
+      args.output,
+      targetUrl,
+    );
+  } else {
+    try {
+      new URL(targetUrl); // Validate each URL individually
+    } catch (_error) {
+      console.error(`Error: Invalid target URL: ${targetUrl}`);
+      exit(1);
+    }  
+    // Enqueue the target url
+    assetQueue.enqueue(targetUrl);
   }
-
-  // Enqueue the target url
-  assetQueue.enqueue(targetUrl);
 
   // Resolve to the actual user agent string
   // - Already validated by args.js, no need for error handling
@@ -123,7 +131,7 @@ export async function crawl(targetUrl: string, args: CliArguments) {
 
   // Process Queue
   let assetsProcessed = 0;
-
+  let lastSave = new Date().getTime();
   while (assetQueue.queue.length > 0) {
     const url = assetQueue.dequeue();
     const asset = new Asset(url);
@@ -160,6 +168,17 @@ export async function crawl(targetUrl: string, args: CliArguments) {
 
       // Add to report
       report.addAsset(asset);
+
+      // Save the unfinishedreport if more than x ms has passed
+      if (new Date().getTime() - lastSave > 5000) {
+        lastSave = new Date().getTime();
+        Debug.logFeed("Autosaving progress");
+        await report.generate(
+          args.output,
+          args.report,
+        );
+      }
+
     } catch (error) {
       Debug.errorFeed(error);
     } finally {

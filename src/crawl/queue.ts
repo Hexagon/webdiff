@@ -4,6 +4,9 @@ export interface AssetQueue {
 
   enqueue(url: string): void;
   dequeue(): string | undefined;
+
+  get(): string[];
+  set(queue: string[]): void;
 }
 
 const assetQueue: AssetQueue = {
@@ -20,6 +23,14 @@ const assetQueue: AssetQueue = {
   dequeue() {
     return this.queue.shift();
   },
+
+  get() {
+    return this.queue;
+  },
+
+  set(queue: string[]) {
+    this.queue = queue;
+  }
 };
 
 export default assetQueue;

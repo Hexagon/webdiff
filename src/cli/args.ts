@@ -8,6 +8,7 @@ export interface CliArguments extends Args {
   "delay": string;
   "output": string;
   "report": string;
+  "resume": string;
   "mime-filter": string;
   "user-agent": string;
   "include-urls": string;
@@ -31,7 +32,6 @@ export function parseAndValidateArgs() {
       "port",
       "delay",
       "output",
-      "report",
       "mime-filter",
       "user-agent",
       "include-urls",
