@@ -28,17 +28,17 @@ async function main() {
 
   switch (action) {
     case "diff":
-      await diff(settings.get("file"), settings.get("fileTwo"), !!settings.get("verbose"), settings.get("output"));
+      await diff(settings.get("target"), settings.get("targetTwo"), !!settings.get("verbose"), settings.get("output"));
       break;
     case "serve":
       // Assume args.port is validated by args.ts
-      serve(parseInt(settings.get("port"), 10), settings.get("output"), settings.get("file"));
+      serve(parseInt(settings.get("port"), 10), settings.get("output"), settings.get("target"));
       break;
     case "resume":
-      await crawl(settings.get("file"), true);
+      await crawl(settings.get("target"), true);
       break;
     case "crawl":
-      await crawl(settings.get("targetUrl"));
+      await crawl(settings.get("target"));
       break;
     default:
       console.error("Invalid arguments or missing action specified.");

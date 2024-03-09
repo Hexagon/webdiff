@@ -1,8 +1,8 @@
 import { exit } from "@cross/utils";
-
-import { getEnv } from "@cross/env"; // Assuming you choose to use this package
+import { getEnv } from "@cross/env";
 import { parseArgs } from "std/cli";
 import { userAgents } from "../crawl/user_agents.ts";
+import { Debug } from "./debug.ts";
 
 interface SettingConfig {
   argName: string;
@@ -30,8 +30,8 @@ export class Settings {
     { argName: "help", objectName: "help", envName: "HELP", scope: ["crawl", "resume", "diff", "serve"] },
     { argName: "target-url", objectName: "targetUrl", envName: "TARGET_URL", scope: ["crawl"] },
     { argName: "action", objectName: "action", envName: "ACTION", scope: ["diff", "serve", "crawl", "resume", "help"] },
-    { argName: "file", objectName: "file", envName: "FILE", scope: ["diff", "serve", "resume"] },
-    { argName: "file-two", objectName: "fileTwo", envName: "FILE_TWO", scope: ["diff"] },
+    { argName: "target", objectName: "target", envName: "TARGET", scope: ["diff", "serve", "resume"] },
+    { argName: "target-two", objectName: "targetTwo", envName: "TARGET_TWO", scope: ["diff"] },
   ];
 
   private settingsData: { [key: string]: any } = {};
@@ -103,10 +103,23 @@ export class Settings {
     if (parsedArgs._.length >= 2) this.set("file", parsedArgs._[1].toString());
     if (parsedArgs._.length >= 3) this.set("fileTwo", parsedArgs._[2].toString());
 
-    // Update settingsData with parsed args
-    Object.assign(this.settingsData, parsedArgs);
+    // Transfer the options
+    for (const argName in parsedArgs) {
 
-    // ToDo: Transfer the options
+      // Skip special properties of the parsedArgs object and short aliases
+      if (['_', '$0'].includes(argName) || argName.length === 1 || parsedArgs[argName] === false) continue;
+
+      // Find the corresponding setting in the settingsConfig
+      const settingConfig = this.settingsConfig.find((setting) => setting.argName === argName);
+
+      if (settingConfig) {
+          this.settingsData[settingConfig.objectName] = parsedArgs[argName];
+      } else {
+          // Optionally handle unknown arguments:
+          Debug.log(`Unknown command-line argument: ${argName}`);  
+          exit(0);
+      }
+    }
   }
 
   private byObject(settingsObject: { [key: string]: any }) {
