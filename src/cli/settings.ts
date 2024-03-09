@@ -22,15 +22,14 @@ export class Settings {
     { argName: "output", objectName: "output", envName: "OUTPUT", scope: ["crawl", "resume"], defaultValue: "./" },
     { argName: "report", objectName: "report", envName: "REPORT", scope: ["crawl", "resume"], defaultValue: `report-${new Date().getTime()}.json` },
     { argName: "mime-filter", objectName: "mimeFilter", envName: "MIME_FILTER", scope: ["crawl", "resume"] },
-    { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"] },
+    { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"], defaultValue: "webdiff" },
     { argName: "include-urls", objectName: "includeUrls", envName: "INCLUDE_URLS", scope: ["crawl", "resume"] },
     { argName: "exclude-urls", objectName: "excludeUrls", envName: "EXCLUDE_URLS", scope: ["crawl", "resume"] },
     { argName: "ignore-robots", objectName: "ignoreRobots", envName: "IGNORE_ROBOTS", scope: ["crawl", "resume"] },
     { argName: "verbose", objectName: "verbose", envName: "VERBOSE", scope: ["crawl", "resume", "diff", "serve"] },
     { argName: "help", objectName: "help", envName: "HELP", scope: ["crawl", "resume", "diff", "serve"] },
-    { argName: "target-url", objectName: "targetUrl", envName: "TARGET_URL", scope: ["crawl"] },
     { argName: "action", objectName: "action", envName: "ACTION", scope: ["diff", "serve", "crawl", "resume", "help"] },
-    { argName: "target", objectName: "target", envName: "TARGET", scope: ["diff", "serve", "resume"] },
+    { argName: "target", objectName: "target", envName: "TARGET", scope: ["crawl", "diff", "serve", "resume"] },
     { argName: "target-two", objectName: "targetTwo", envName: "TARGET_TWO", scope: ["diff"] },
   ];
 
@@ -51,6 +50,7 @@ export class Settings {
     this.byDefault();
     this.byEnv();
     this.byArgs();
+    this.validate();
   }
 
   private byDefault() {
@@ -100,8 +100,8 @@ export class Settings {
     });
 
     if (parsedArgs._.length >= 1) this.set("action", parsedArgs._[0].toString().toLowerCase());
-    if (parsedArgs._.length >= 2) this.set("file", parsedArgs._[1].toString());
-    if (parsedArgs._.length >= 3) this.set("fileTwo", parsedArgs._[2].toString());
+    if (parsedArgs._.length >= 2) this.set("target", parsedArgs._[1].toString());
+    if (parsedArgs._.length >= 3) this.set("targetTwo", parsedArgs._[2].toString());
 
     // Transfer the options
     for (const argName in parsedArgs) {
@@ -154,12 +154,14 @@ export class Settings {
       exit(1);
     }
 
+    // Validate port
     const parsedPort = parseInt(this.get("port"), 10);
     if (isNaN(parsedPort) || parsedPort < 0 || parsedPort >= 65536) {
       console.error("Error: Delay must be a positive number less than 65536.");
       exit(1);
     }
 
+    // Validate user agent
     if (!this.get("userAgent") || !Object.keys(userAgents).includes(this.get("userAgent"))) {
       console.error(
         `Error: Invalid user-agent. Valid options are: ${Object.keys(userAgents).join(", ")}`,
@@ -184,5 +186,14 @@ export class Settings {
         exit(1);
       }
     }
+
+    // Validate scopes
+    const action = this.get('action');
+    this.settingsConfig.forEach(setting => {
+        if (!setting.scope.includes(action) && setting.defaultValue !== this.get(setting.objectName)) {
+            console.error(`Error: Setting '${setting.objectName}' is not valid for the action '${action}'.`);
+            exit(1); 
+        }
+    });
   }
 }

@@ -20,6 +20,8 @@ async function main() {
   // Extract action
   const action = settings.get("action");
 
+  console.log(settings.exportToObject());
+  
   // Handle no-ops
   if (settings.get("help") || action === "help") {
     help();
