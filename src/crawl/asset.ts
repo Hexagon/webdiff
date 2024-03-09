@@ -1,11 +1,10 @@
 import { DOMParser } from "linkedom";
 import { dirname, join } from "std/path";
-import { exists } from "std/fs";
 import { lookup } from "mrmime";
 import { XMLParser } from "fast-xml-parser";
 import { zlibSync } from "fflate";
 import { Debug } from "../cli/debug.ts";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 
 export interface AssetData {
   url: string | undefined;
@@ -362,7 +361,7 @@ export class Asset implements AssetData {
       throw new Error("Error saving page: No data");
     }
     const fullLocalPath = join(assetDirectory, "assets", this.hash);
-    if (await exists(fullLocalPath)) {
+    if (await stat(fullLocalPath)) {
       // Asset already exists
       return;
     }

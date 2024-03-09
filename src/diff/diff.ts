@@ -1,12 +1,11 @@
 import { exit } from "@cross/utils";
-import { exists } from "std/fs";
 import { colors } from "cliffy/ansi/mod.ts";
 import { Table } from "cliffy/table/mod.ts";
 import { AssetReportData, ReportData } from "../crawl/report.ts";
 import { createTwoFilesPatch } from "diff";
 import { unzlibSync } from "fflate";
 import { join } from "std/path";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 
 interface ChangedAssetData {
   change_type: "removed" | "added" | "modified";
@@ -17,7 +16,7 @@ interface ChangedAssetData {
 // Run diff
 async function compareJSONFiles(file1Path: string, file2Path: string): Promise<ChangedAssetData[]> {
   // Error handling for file existence
-  if (!await exists(file1Path) || !await exists(file2Path)) {
+  if (!await stat(file1Path) || !await stat(file2Path)) {
     console.error(
       "One or both JSON files not found. Paths:",
       file1Path,

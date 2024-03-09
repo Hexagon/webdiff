@@ -13,8 +13,9 @@ import { Robots } from "./robots.ts";
 import assetQueue from "./queue.ts";
 import { userAgents } from "./user_agents.ts";
 
-// Interfaces (explained later)
-import type { CliArguments } from "../cli/args.ts";
+import { Settings } from "../cli/settings.ts";
+
+const settings = Settings.getInstance();
 
 function shouldEnqueue(url: URL, baseUrl: string, mimeFilter: string[], includeRegex: RegExp | null, excludeRegex: RegExp | null) {
   // Remove anchor information
@@ -77,27 +78,27 @@ async function fetchRobots(targetUrl: string, userAgentString: string | undefine
 
 export const report = new Report(metadata.version); // Create a report object
 
-export async function crawl(targetUrl: string, args: CliArguments, resume?: boolean) {
+export async function crawl(targetUrl: string, resume?: boolean) {
   console.log(colors.bold("Processing queue\n"));
 
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed
   let includeRegex: RegExp | null = null;
   let excludeRegex: RegExp | null = null;
-  if (args["include-urls"]) {
-    includeRegex = new RegExp(args["include-urls"]);
-    Debug.debugFeed(`Only processing assets matching regex: ${args["include-urls"]}`);
+  if (settings.get("includeUrls")) {
+    includeRegex = new RegExp(settings.get("includeUrls"));
+    Debug.debugFeed(`Only processing assets matching regex: ${settings.get("includeUrls")}`);
   }
-  if (args["exclude-urls"]) {
-    excludeRegex = new RegExp(args["exclude-urls"]);
-    Debug.debugFeed("Ignoring assets matching regex: " + args["exclude-urls"]);
+  if (settings.get("excludeUrls")) {
+    excludeRegex = new RegExp(settings.get("excludeUrls"));
+    Debug.debugFeed("Ignoring assets matching regex: " + settings.get("excludeUrls"));
   }
 
   // Resume or start?
   if (resume) {
-    args.report = targetUrl;
+    settings.set("report", targetUrl);
     await report.resume(
-      args.output,
+      settings.get("output"),
       targetUrl,
     );
     if (!report.data.meta.url) {
@@ -107,10 +108,10 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
       targetUrl = report.data.meta.url;
     }
     if (report.data.meta.finished || assetQueue.queue.length === 0) {
-      Debug.logFeed(`Nothing to do, can not resume ${args.report}.`);
+      Debug.logFeed(`Nothing to do, can not resume ${settings.get("report")}.`);
       exit(1);
     } else {
-      Debug.logFeed("Resuming crawling of ${args.report}.");
+      Debug.logFeed(`Resuming crawling of ${settings.get("report")}.`);
     }
   } else {
     try {
@@ -126,11 +127,11 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
 
   // Resolve to the actual user agent string
   // - Already validated by args.js, no need for error handling
-  const resolvedUserAgent = userAgents[args["user-agent"]] as string | undefined;
+  const resolvedUserAgent = userAgents[settings.get("userAgent")] as string | undefined;
 
   Debug.debugFeed(`User user agent string: ${resolvedUserAgent}`);
 
-  if (!args["ignore-robots"]) {
+  if (!settings.get("ignoreRobots")) {
     try {
       await fetchRobots(targetUrl, resolvedUserAgent);
     } catch (error) {
@@ -140,7 +141,8 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
     Debug.debugFeed("Ignoring robots.txt");
   }
 
-  const mimeFilter: string[] = args["mime-filter"] ? args["mime-filter"].split(",").map((item) => item.trim()) : [];
+  // @ts-ignore no-explicit-any
+  const mimeFilter: string[] = settings.get("mimeFilter") ? settings.get("mimeFilter").split(",").map((item) => item.trim()) : [];
 
   // Process Queue
   let assetsProcessed = 0;
@@ -174,11 +176,6 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
         }
       });
 
-      // Conditionally save the asset to disk
-      if (!args["report-only"]) {
-        await asset.save(args.output);
-      }
-
       // Add to report
       report.addAsset(asset);
 
@@ -187,14 +184,14 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
         lastSave = new Date().getTime();
         Debug.logFeed("Autosaving progress");
         await report.generate(
-          args.output,
-          args.report,
+          settings.get("output"),
+          settings.get("report"),
         );
       }
     } catch (error) {
       Debug.errorFeed(error);
     } finally {
-      const delayMs = parseInt(args.delay, 10);
+      const delayMs = parseInt(settings.get("delay"), 10);
       await delay(delayMs);
     }
 
@@ -204,7 +201,7 @@ export async function crawl(targetUrl: string, args: CliArguments, resume?: bool
   }
 
   await report.generate(
-    args.output,
-    args.report,
+    settings.get("output"),
+    settings.get("report"),
   );
 }

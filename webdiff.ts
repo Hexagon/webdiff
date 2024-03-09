@@ -1,6 +1,6 @@
 import { exit } from "@cross/utils";
 
-import { parseAndValidateArgs } from "./src/cli/args.ts";
+import { Settings } from "./src/cli/settings.ts";
 
 import { help } from "./src/cli/help.ts";
 import { diff } from "./src/diff/diff.ts";
@@ -9,39 +9,36 @@ import { serve } from "./src/serve/serve.ts";
 
 import { Debug } from "./src/cli/debug.ts";
 
-async function main() {
-  const args = parseAndValidateArgs();
+const settings = Settings.getInstance();
 
+async function main() {
   // Enable verbose debugging if requested, as soon as possible
-  if (args.verbose) {
+  if (settings.get("verbose")) {
     Debug.verbose();
   }
 
   // Extract action
-  const action = (args._[0] ?? "").toLowerCase();
+  const action = settings.get("action");
 
   // Handle no-ops
-  if (args.help || action === "help") {
-    help(args);
+  if (settings.get("help") || action === "help") {
+    help();
     exit(0);
   }
 
-  const arg1 = (args._[1] ?? "").toLowerCase();
-  const arg2 = (args._[2] ?? "").toLowerCase();
-
   switch (action) {
     case "diff":
-      await diff(arg1, arg2, args.verbose, args.output);
+      await diff(settings.get("file"), settings.get("fileTwo"), !!settings.get("verbose"), settings.get("output"));
       break;
     case "serve":
       // Assume args.port is validated by args.ts
-      serve(parseInt(args.port, 10), args.output, arg1 || args.report);
+      serve(parseInt(settings.get("port"), 10), settings.get("output"), settings.get("file"));
       break;
     case "resume":
-      await crawl(arg1, args, true);
+      await crawl(settings.get("file"), true);
       break;
     case "crawl":
-      await crawl(arg1, args);
+      await crawl(settings.get("targetUrl"));
       break;
     default:
       console.error("Invalid arguments or missing action specified.");

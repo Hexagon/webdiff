@@ -8,7 +8,7 @@
     "linkedom": "npm:linkedom@0.16.8",
     "mrmime": "npm:mrmime@2.0.0",
     "std/cli": "jsr:@std/cli@0.218.2",
-    "std/fs": "jsr:@std/fs@0.218.2",
-    "std/path": "jsr:@std/path@0.218.2"
+    "std/path": "jsr:@std/path@0.218.2",
+    "@cross/env": "jsr:@cross/env@^0.2.2"
   }
 }

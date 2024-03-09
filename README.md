@@ -47,7 +47,6 @@ Optionally add `-f` to overwrite (upgrade) a previous install.
      - `--output <directory>` Specify the output directory (default: "./")
      - `--report <filename>` Specify the report filename (default: "report-<timestamp>.json")
      - `--verbose` Enable verbose debugging output
-     - `--report-only` Generates the report without storing the assets.
      - `--mime-filter` Does only process assets with the specified mime type(s), comma separated. (example: `--mime-filter "text/html, image/jpeg"`).
      - `--include-urls` Does only process assets matching the specified regex.
      - `--exclude-urls` Ignores assets matching the specified regex.
