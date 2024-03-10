@@ -27,7 +27,8 @@ export class Settings {
     { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"], defaultValue: "webdiff" },
     { argName: "include-urls", objectName: "includeUrls", envName: "INCLUDE_URLS", scope: ["crawl", "resume"] },
     { argName: "exclude-urls", objectName: "excludeUrls", envName: "EXCLUDE_URLS", scope: ["crawl", "resume"] },
-    { argName: "autosave", objectName: "autosave", envName: "AUTOSAVE", scope: ["crawl", "resume"], defaultValue: "60"},
+    { argName: "no-override", objectName: "noOverride", envName: "NO_OVERRIDE", scope: ["resume"] },
+    { argName: "autosave", objectName: "autosave", envName: "AUTOSAVE", scope: ["crawl", "resume"], defaultValue: "60" },
     { argName: "ignore-robots", objectName: "ignoreRobots", envName: "IGNORE_ROBOTS", scope: ["crawl", "resume"] },
     { argName: "verbose", objectName: "verbose", envName: "VERBOSE", scope: ["crawl", "resume", "diff", "serve"] },
     { argName: "help", objectName: "help", envName: "HELP", scope: ["crawl", "resume", "diff", "serve"] },
@@ -81,6 +82,7 @@ export class Settings {
         "verbose",
         "help",
         "ignore-robots",
+        "no-override",
       ],
       string: [
         "port",
@@ -110,19 +112,18 @@ export class Settings {
 
     // Transfer the options
     for (const argName in parsedArgs) {
-
       // Skip special properties of the parsedArgs object and short aliases
-      if (['_', '$0'].includes(argName) || argName.length === 1 || parsedArgs[argName] === false) continue;
+      if (["_", "$0"].includes(argName) || argName.length === 1 || parsedArgs[argName] === false) continue;
 
       // Find the corresponding setting in the settingsConfig
       const settingConfig = this.settingsConfig.find((setting) => setting.argName === argName);
 
       if (settingConfig) {
-          this.settingsData[settingConfig.objectName] = parsedArgs[argName] as string | undefined;
+        this.settingsData[settingConfig.objectName] = parsedArgs[argName] as string | undefined;
       } else {
-          // Optionally handle unknown arguments:
-          Debug.log(`Unknown command-line argument: ${argName}`);  
-          exit(0);
+        // Optionally handle unknown arguments:
+        Debug.log(`Unknown command-line argument: ${argName}`);
+        exit(0);
       }
     }
   }
@@ -203,7 +204,7 @@ export class Settings {
         exit(1);
       }
     }
-    const excludeUrls = this.get("excludeUrls")
+    const excludeUrls = this.get("excludeUrls");
     if (excludeUrls) {
       try {
         new RegExp(excludeUrls);
@@ -214,12 +215,12 @@ export class Settings {
     }
 
     // Validate scopes
-    const action = this.get('action') as WebdiffScope;
-    this.settingsConfig.forEach(setting => {
-        if (!setting.scope.includes(action) && setting.defaultValue !== this.get(setting.objectName)) {
-            console.error(`Error: Setting '${setting.objectName}' is not valid for the action '${action}'.`);
-            exit(1); 
-        }
+    const action = this.get("action") as WebdiffScope;
+    this.settingsConfig.forEach((setting) => {
+      if (!setting.scope.includes(action) && setting.defaultValue !== this.get(setting.objectName)) {
+        console.error(`Error: Setting '${setting.objectName}' is not valid for the action '${action}'.`);
+        exit(1);
+      }
     });
   }
 }

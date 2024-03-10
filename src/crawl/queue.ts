@@ -7,6 +7,8 @@ export interface AssetQueue {
 
   get(): string[];
   set(queue: string[]): void;
+
+  block(url: string): void;
 }
 
 const assetQueue: AssetQueue = {
@@ -17,6 +19,12 @@ const assetQueue: AssetQueue = {
     if (!this.urls.has(url)) {
       this.urls.add(url);
       this.queue.push(url);
+    }
+  },
+
+  block(url: string) {
+    if (!this.urls.has(url)) {
+      this.urls.add(url);
     }
   },
 

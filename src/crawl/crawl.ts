@@ -180,7 +180,7 @@ export async function crawl(targetUrl: string, resume?: boolean) {
       report.addAsset(asset);
 
       // Save the unfinishedreport if more than x ms has passed
-      const autosaveSeconds = parseInt(settings.get("autosave"),10);
+      const autosaveSeconds = parseInt(settings.get("autosave"), 10);
       if (autosaveSeconds) {
         if (new Date().getTime() - lastSave > autosaveSeconds * 1000) {
           lastSave = new Date().getTime();

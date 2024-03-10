@@ -14,6 +14,7 @@ interface ReportMeta {
   started: string; // ISO Date
   finished?: string; // ISO Date
   queue?: string[]; // Queue left
+  processed?: string[]; // Processed urls
   version: string; // Application version
   settings: SettingsData; // The settings the report were run with
 }
@@ -41,7 +42,7 @@ export class Report {
       meta: {
         started: new Date().toISOString(),
         version,
-        settings: settings.exportToObject()
+        settings: settings.exportToObject(),
       },
     };
   }
@@ -65,7 +66,10 @@ export class Report {
     if (assetQueue.queue.length === 0) {
       this.data.meta.finished = new Date().toISOString();
     } else {
-      if (assetQueue.queue.length > 0) this.data.meta.queue = assetQueue.queue;
+      if (assetQueue.queue.length > 0) {
+        this.data.meta.queue = assetQueue.queue;
+        this.data.meta.processed = Array.from(assetQueue.urls);
+      }
     }
     const reportString = JSON.stringify(this.data, null, 2);
     if (outputDirectory) {
@@ -94,7 +98,10 @@ export class Report {
       this.data.meta.url = reportData.meta.url;
 
       // Override settings
-      settings.byObject(reportData.meta.settings);
+      if (!settings.get("noOverride")) {
+        settings.byObject(reportData.meta.settings);
+        this.data.meta.settings = settings.exportToObject();
+      }
 
       // Reconstruct all assets
       reportData.assets.forEach((assetData) => {
@@ -112,6 +119,7 @@ export class Report {
 
       // Feed queue
       reportData.meta.queue?.forEach((entry) => assetQueue.enqueue(entry));
+      reportData.meta.processed?.forEach((entry) => assetQueue.block(entry));
 
       Debug.log("Assets from report loaded into the queue.");
     } catch (error) {
