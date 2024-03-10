@@ -5,6 +5,9 @@ import { Asset } from "./asset.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import assetQueue from "./queue.ts";
 import { Debug } from "../cli/debug.ts";
+import { Settings, SettingsData } from "../cli/settings.ts";
+
+const settings = Settings.getInstance();
 
 interface ReportMeta {
   url?: string; // Target url
@@ -12,6 +15,7 @@ interface ReportMeta {
   finished?: string; // ISO Date
   queue?: string[]; // Queue left
   version: string; // Application version
+  settings: SettingsData; // The settings the report were run with
 }
 
 export interface AssetReportData {
@@ -37,6 +41,7 @@ export class Report {
       meta: {
         started: new Date().toISOString(),
         version,
+        settings: settings.exportToObject()
       },
     };
   }
@@ -87,6 +92,9 @@ export class Report {
 
       // Overwrite target url
       this.data.meta.url = reportData.meta.url;
+
+      // Override settings
+      settings.byObject(reportData.meta.settings);
 
       // Reconstruct all assets
       reportData.assets.forEach((assetData) => {

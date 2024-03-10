@@ -180,13 +180,16 @@ export async function crawl(targetUrl: string, resume?: boolean) {
       report.addAsset(asset);
 
       // Save the unfinishedreport if more than x ms has passed
-      if (new Date().getTime() - lastSave > 60000) {
-        lastSave = new Date().getTime();
-        Debug.logFeed("Autosaving progress");
-        await report.generate(
-          settings.get("output"),
-          settings.get("report"),
-        );
+      const autosaveSeconds = parseInt(settings.get("autosave"),10);
+      if (autosaveSeconds) {
+        if (new Date().getTime() - lastSave > autosaveSeconds * 1000) {
+          lastSave = new Date().getTime();
+          Debug.logFeed("Autosaving progress");
+          await report.generate(
+            settings.get("output"),
+            settings.get("report"),
+          );
+        }
       }
     } catch (error) {
       Debug.errorFeed(error);

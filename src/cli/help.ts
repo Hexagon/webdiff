@@ -31,6 +31,8 @@ export function help() {
     ["  --ignore-robots", "Ignore all directives of robots.txt", ""],
     ["  --exclude-urls", "Ignore asset urls matching a specific regex", ""],
     ["  --include-urls", "Only process asset urls matching a specific regex", ""],
+    ["  --no-override", "Do not force previous settings while resuming", ""],
+    ["  --autosave", "Number of seconds to wait between autosaves, 0 to disable, default: 60", ""],
     ["  --verbose", "Enable verbose logging", ""],
     ["  --help", "Displays this help message", ""],
   );

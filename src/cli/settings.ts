@@ -12,6 +12,8 @@ interface SettingConfig {
   defaultValue?: string;
 }
 
+export type SettingsData = { [key: string]: string | undefined };
+
 type WebdiffScope = "diff" | "crawl" | "resume" | "serve" | "help";
 
 export class Settings {
@@ -25,6 +27,7 @@ export class Settings {
     { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"], defaultValue: "webdiff" },
     { argName: "include-urls", objectName: "includeUrls", envName: "INCLUDE_URLS", scope: ["crawl", "resume"] },
     { argName: "exclude-urls", objectName: "excludeUrls", envName: "EXCLUDE_URLS", scope: ["crawl", "resume"] },
+    { argName: "autosave", objectName: "autosave", envName: "AUTOSAVE", scope: ["crawl", "resume"], defaultValue: "60"},
     { argName: "ignore-robots", objectName: "ignoreRobots", envName: "IGNORE_ROBOTS", scope: ["crawl", "resume"] },
     { argName: "verbose", objectName: "verbose", envName: "VERBOSE", scope: ["crawl", "resume", "diff", "serve"] },
     { argName: "help", objectName: "help", envName: "HELP", scope: ["crawl", "resume", "diff", "serve"] },
@@ -33,7 +36,7 @@ export class Settings {
     { argName: "target-two", objectName: "targetTwo", envName: "TARGET_TWO", scope: ["diff"] },
   ];
 
-  private settingsData: { [key: string]: any } = {};
+  private settingsData: SettingsData = {};
 
   constructor() {
     this.loadSettings();
@@ -63,7 +66,7 @@ export class Settings {
     this.settingsData[objectName] = stringValue;
   }
 
-  getDefault(key: string): any {
+  getDefault(key: string): unknown {
     const settingConfig = this.settingsConfig.find((setting) => setting.objectName === key);
     if (settingConfig) {
       return settingConfig.defaultValue;
@@ -82,6 +85,7 @@ export class Settings {
       string: [
         "port",
         "delay",
+        "autosave",
         "output",
         "mime-filter",
         "user-agent",
@@ -92,6 +96,7 @@ export class Settings {
         d: "delay",
         p: "port",
         o: "output",
+        a: "autosave",
         r: "report",
         u: "user-agent",
         i: "ignore-robots",
@@ -113,7 +118,7 @@ export class Settings {
       const settingConfig = this.settingsConfig.find((setting) => setting.argName === argName);
 
       if (settingConfig) {
-          this.settingsData[settingConfig.objectName] = parsedArgs[argName];
+          this.settingsData[settingConfig.objectName] = parsedArgs[argName] as string | undefined;
       } else {
           // Optionally handle unknown arguments:
           Debug.log(`Unknown command-line argument: ${argName}`);  
@@ -122,7 +127,7 @@ export class Settings {
     }
   }
 
-  private byObject(settingsObject: { [key: string]: any }) {
+  byObject(settingsObject: SettingsData) {
     this.settingsData = {
       ...this.settingsData,
       ...settingsObject,
@@ -138,31 +143,50 @@ export class Settings {
     });
   }
 
-  get(key: string): any {
-    return this.settingsData[key];
+  get(key: string): string | undefined {
+    let setting = this.settingsData[key];
+    if (setting == "") setting = undefined;
+    return setting;
   }
 
-  exportToObject() {
+  exportToObject(): SettingsData {
     return { ...this.settingsData };
   }
 
   validate() {
     // Validate delayMs
-    const parsedDelay = parseInt(this.get("delay"), 10);
-    if (isNaN(parsedDelay) || parsedDelay <= 0 || parsedDelay >= 3600 * 1000) {
-      console.error("Error: Delay must be a positive number less than 3 600 000 (1 hour).");
-      exit(1);
+    const delayValue = this.get("delay");
+    if (delayValue !== undefined) {
+      const parsedDelay = parseInt(delayValue, 10);
+      if (isNaN(parsedDelay) || parsedDelay <= 0 || parsedDelay >= 3600 * 1000) {
+        console.error("Error: Delay must be a positive number less than 3 600 000 (1 hour).");
+        exit(1);
+      }
     }
 
     // Validate port
-    const parsedPort = parseInt(this.get("port"), 10);
-    if (isNaN(parsedPort) || parsedPort < 0 || parsedPort >= 65536) {
-      console.error("Error: Delay must be a positive number less than 65536.");
-      exit(1);
+    const portValue = this.get("port");
+    if (portValue !== undefined) {
+      const parsedPort = parseInt(portValue, 10);
+      if (isNaN(parsedPort) || parsedPort < 0 || parsedPort >= 65536) {
+        console.error("Error: Delay must be a positive number less than 65536.");
+        exit(1);
+      }
+    }
+
+    // Validate autosave
+    const autosaveValue = this.get("autosave");
+    if (autosaveValue) {
+      const parsedAutosave = parseInt(autosaveValue, 10);
+      if (isNaN(parsedAutosave) || parsedAutosave < 0 || parsedAutosave >= 3600) {
+        console.error("Error: Autosave argument must be a positive number less than 3600, or 0 (disabled).");
+        exit(1);
+      }
     }
 
     // Validate user agent
-    if (!this.get("userAgent") || !Object.keys(userAgents).includes(this.get("userAgent"))) {
+    const userAgent = this.get("userAgent");
+    if (!userAgent || (userAgent !== undefined && !Object.keys(userAgents).includes(userAgent))) {
       console.error(
         `Error: Invalid user-agent. Valid options are: ${Object.keys(userAgents).join(", ")}`,
       );
@@ -170,17 +194,19 @@ export class Settings {
     }
 
     // Validate regexes for inclusion or exclusion
-    if (this.get("includeUrls")) {
+    const includeUrls = this.get("includeUrls");
+    if (includeUrls !== undefined) {
       try {
-        new RegExp(this.get("includeUrls"));
+        new RegExp(includeUrls);
       } catch (error) {
-        console.error("Invalid --include-url regex:" + this.get("includeUrls"), error);
+        console.error("Invalid --include-url regex:" + includeUrls, error);
         exit(1);
       }
     }
-    if (this.get("excludeUrls")) {
+    const excludeUrls = this.get("excludeUrls")
+    if (excludeUrls) {
       try {
-        new RegExp(this.get("excludeUrls"));
+        new RegExp(excludeUrls);
       } catch (error) {
         console.error("Invalid --exclude-url regex:" + this.get("excludeUrls"), error);
         exit(1);
@@ -188,7 +214,7 @@ export class Settings {
     }
 
     // Validate scopes
-    const action = this.get('action');
+    const action = this.get('action') as WebdiffScope;
     this.settingsConfig.forEach(setting => {
         if (!setting.scope.includes(action) && setting.defaultValue !== this.get(setting.objectName)) {
             console.error(`Error: Setting '${setting.objectName}' is not valid for the action '${action}'.`);
