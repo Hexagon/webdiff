@@ -27,7 +27,7 @@ export class Settings {
     { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"], defaultValue: "webdiff" },
     { argName: "include-urls", objectName: "includeUrls", envName: "INCLUDE_URLS", scope: ["crawl", "resume"] },
     { argName: "exclude-urls", objectName: "excludeUrls", envName: "EXCLUDE_URLS", scope: ["crawl", "resume"] },
-    { argName: "no-override", objectName: "noOverride", envName: "NO_OVERRIDE", scope: ["resume"] },
+    { argName: "override", objectName: "override", envName: "OVERRIDE", scope: ["resume"] },
     { argName: "autosave", objectName: "autosave", envName: "AUTOSAVE", scope: ["crawl", "resume"], defaultValue: "60" },
     { argName: "ignore-robots", objectName: "ignoreRobots", envName: "IGNORE_ROBOTS", scope: ["crawl", "resume"] },
     { argName: "verbose", objectName: "verbose", envName: "VERBOSE", scope: ["crawl", "resume", "diff", "serve"] },
@@ -82,7 +82,7 @@ export class Settings {
         "verbose",
         "help",
         "ignore-robots",
-        "no-override",
+        "override",
       ],
       string: [
         "port",

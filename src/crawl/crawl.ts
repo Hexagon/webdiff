@@ -86,11 +86,11 @@ export async function crawl(targetUrl: string, resume?: boolean) {
   let includeRegex: RegExp | null = null;
   let excludeRegex: RegExp | null = null;
   if (settings.get("includeUrls")) {
-    includeRegex = new RegExp(settings.get("includeUrls"));
+    includeRegex = new RegExp(settings.get("includeUrls") as string);
     Debug.debugFeed(`Only processing assets matching regex: ${settings.get("includeUrls")}`);
   }
   if (settings.get("excludeUrls")) {
-    excludeRegex = new RegExp(settings.get("excludeUrls"));
+    excludeRegex = new RegExp(settings.get("excludeUrls") as string);
     Debug.debugFeed("Ignoring assets matching regex: " + settings.get("excludeUrls"));
   }
 
@@ -98,7 +98,7 @@ export async function crawl(targetUrl: string, resume?: boolean) {
   if (resume) {
     settings.set("report", targetUrl);
     await report.resume(
-      settings.get("output"),
+      settings.get("output") || "",
       targetUrl,
     );
     if (!report.data.meta.url) {
@@ -127,7 +127,7 @@ export async function crawl(targetUrl: string, resume?: boolean) {
 
   // Resolve to the actual user agent string
   // - Already validated by args.js, no need for error handling
-  const resolvedUserAgent = userAgents[settings.get("userAgent")] as string | undefined;
+  const resolvedUserAgent = userAgents[settings.get("userAgent") as string] as string | undefined;
 
   Debug.debugFeed(`User user agent string: ${resolvedUserAgent}`);
 
@@ -180,21 +180,21 @@ export async function crawl(targetUrl: string, resume?: boolean) {
       report.addAsset(asset);
 
       // Save the unfinishedreport if more than x ms has passed
-      const autosaveSeconds = parseInt(settings.get("autosave"), 10);
+      const autosaveSeconds = parseInt(settings.get("autosave") || "", 10);
       if (autosaveSeconds) {
         if (new Date().getTime() - lastSave > autosaveSeconds * 1000) {
           lastSave = new Date().getTime();
           Debug.logFeed("Autosaving progress");
           await report.generate(
-            settings.get("output"),
-            settings.get("report"),
+            settings.get("output") || "",
+            settings.get("report") || "",
           );
         }
       }
     } catch (error) {
       Debug.errorFeed(error);
     } finally {
-      const delayMs = parseInt(settings.get("delay"), 10);
+      const delayMs = parseInt(settings.get("delay") || "500", 10);
       await delay(delayMs);
     }
 
@@ -204,7 +204,7 @@ export async function crawl(targetUrl: string, resume?: boolean) {
   }
 
   await report.generate(
-    settings.get("output"),
-    settings.get("report"),
+    settings.get("output") || "",
+    settings.get("report") || "",
   );
 }

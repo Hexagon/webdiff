@@ -98,7 +98,7 @@ export class Report {
       this.data.meta.url = reportData.meta.url;
 
       // Override settings
-      if (!settings.get("noOverride")) {
+      if (!settings.get("override")) {
         settings.byObject(reportData.meta.settings);
         this.data.meta.settings = settings.exportToObject();
       }

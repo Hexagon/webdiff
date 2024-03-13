@@ -52,6 +52,8 @@ Optionally add `-f` to overwrite (upgrade) a previous install.
      - `--exclude-urls` Ignores assets matching the specified regex.
      - `--user-agent` Use a specific user agent string, one of `chrome`, `firefox`, `webdiff` or `none`. (default: `webdiff`)
      - `--ignore-robots` Ignore directives of `robots.txt` even if found on server.
+     - `--autosave <seconds>` Autosave report each x seconds. (default: 60)
+     - `--override` Override the settings stored from the initial run when resuming.
 
 Webdiff will by default store `report-<timestamp>.json` in the current directory, and a compressed version of each downloaded asset in `assets/<hash>`.
 
