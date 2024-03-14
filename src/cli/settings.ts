@@ -1,6 +1,6 @@
 import { exit } from "@cross/utils";
 import { getEnv } from "@cross/env";
-import { parseArgs } from "std/cli";
+import { parseArgs } from "@std/cli";
 import { userAgents } from "../crawl/user_agents.ts";
 import { Debug } from "./debug.ts";
 

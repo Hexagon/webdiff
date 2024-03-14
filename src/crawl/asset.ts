@@ -1,5 +1,5 @@
 import { DOMParser } from "linkedom";
-import { dirname, join } from "std/path";
+import { dirname, join } from "@std/path";
 import { lookup } from "mrmime";
 import { XMLParser } from "fast-xml-parser";
 import { zlibSync } from "fflate";

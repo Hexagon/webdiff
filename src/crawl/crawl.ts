@@ -1,9 +1,8 @@
-import { exit } from "@cross/utils";
+import { Colors, exit } from "@cross/utils";
 
 import metadata from "../../deno.json" with { type: "json" };
 
 import { lookup } from "mrmime";
-import { colors } from "cliffy/ansi/mod.ts";
 
 import { Asset } from "./asset.ts";
 import { delay } from "../utils/delay.ts";
@@ -79,7 +78,7 @@ async function fetchRobots(targetUrl: string, userAgentString: string | undefine
 export const report = new Report(metadata.version); // Create a report object
 
 export async function crawl(targetUrl: string, resume?: boolean) {
-  console.log(colors.bold("Processing queue\n"));
+  console.log(Colors.bold("Processing queue\n"));
 
   // Handle regexes for inclusion or exclusion
   // - Already validated in args.js, no error handling needed

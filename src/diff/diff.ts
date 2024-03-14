@@ -1,11 +1,10 @@
-import { exit } from "@cross/utils";
-import { colors } from "cliffy/ansi/mod.ts";
-import { Table } from "cliffy/table/mod.ts";
+import { Colors, exit } from "@cross/utils";
 import { AssetReportData, ReportData } from "../crawl/report.ts";
 import { createTwoFilesPatch } from "diff";
 import { unzlibSync } from "fflate";
-import { join } from "std/path";
+import { join } from "@std/path";
 import { readFile, stat } from "node:fs/promises";
+import { renderTable } from "../utils/table.ts";
 
 interface ChangedAssetData {
   change_type: "removed" | "added" | "modified";
@@ -81,19 +80,20 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
     const changes = await compareJSONFiles(report1Path, report2Path);
 
     // Create a table for structured output
-    const table = new Table()
-      .header([colors.bold("URL"), colors.bold("Change Type"), colors.bold("Last Modified")]);
+    const table: string[][] = [
+      [Colors.bold("URL"), Colors.bold("Change Type"), Colors.bold("Last Modified")],
+    ];
 
     for (const change of changes) {
       switch (change.change_type) {
         case "added":
-          table.push([change.new?.url, colors.green(change.change_type), change.new?.last_modified || ""]);
+          table.push([change.new?.url || "", Colors.green(change.change_type), change.new?.last_modified || ""]);
           break;
         case "removed":
-          table.push([change.old?.url, colors.red(change.change_type), ""]);
+          table.push([change.old?.url || "", Colors.red(change.change_type), ""]);
           break;
         case "modified":
-          table.push([change.new?.url, colors.yellow(change.change_type), change.new?.last_modified || ""]);
+          table.push([change.new?.url || "", Colors.yellow(change.change_type), change.new?.last_modified || ""]);
           if (verbose && change.new && change.old) {
             const assetDir = join(outputDir, "assets");
             const file1Path = `${assetDir}/${change.new.hash}`;
@@ -106,7 +106,13 @@ export async function diff(report1Path: string, report2Path: string, verbose: bo
           break;
       }
     }
-    console.log(table.toString());
+    if (table.length === 1) {
+      console.log("There are no differences.");
+      exit(0);
+    } else {
+      renderTable(table);
+      exit(0);
+    }
   } catch (error) {
     console.error("Error comparing reports:", error);
     exit(1);

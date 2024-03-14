@@ -1,28 +1,29 @@
 import metadata from "../../deno.json" with { type: "json" };
 
-import { colors } from "cliffy/ansi/mod.ts";
-import { Table } from "cliffy/table/mod.ts";
+import { Colors } from "@cross/utils";
 import { Settings } from "./settings.ts";
+import { renderTable } from "../utils/table.ts";
 
 const settings = Settings.getInstance();
 
 const command = "deno run -A webdiff.js";
 
 export function help() {
-  console.log(colors.bold(`${metadata.name} ${metadata.version}`));
+  console.log(Colors.bold(`${metadata.name} ${metadata.version}`));
   console.log("A cli tool for recursive web asset crawling and analysis.\n");
 
-  console.log(colors.bold("Usage\n"));
+  console.log(Colors.bold("Usage\n"));
 
-  console.log(colors.green(`  ${command} crawl [options] [<target_url>] \n`));
-  console.log(colors.green(`  ${command} resume [options] <report>`));
-  console.log(colors.green(`  ${command} serve <report>`));
-  console.log(colors.green(`  ${command} diff <report1> <report2>`));
+  console.log(Colors.green(`  ${command} crawl [options] [<target_url>] \n`));
+  console.log(Colors.green(`  ${command} resume [options] <report>`));
+  console.log(Colors.green(`  ${command} serve <report>`));
+  console.log(Colors.green(`  ${command} diff <report1> <report2>`));
 
-  const table = new Table()
-    .header([colors.bold("Option"), colors.bold("Description"), colors.bold("Default")]);
+  console.log("");
 
-  table.push(
+  renderTable([
+    [Colors.bold("Option"), Colors.bold("Description"), Colors.bold("Default")],
+    ["", "", ""],
     ["  --delay <milliseconds>", "Delay between fetches", `${settings.getDefault("delay")}ms`],
     ["  --directory <directory>", "Report directory", `"./"`],
     ["  --report <filename>", "Report filename", "report-<timestamp>.json"],
@@ -35,7 +36,7 @@ export function help() {
     ["  --autosave", "Number of seconds to wait between autosaves, 0 to disable, default: 60", ""],
     ["  --verbose", "Enable verbose logging", ""],
     ["  --help", "Displays this help message", ""],
-  );
+  ]);
 
-  console.log(table.toString());
+  console.log("");
 }

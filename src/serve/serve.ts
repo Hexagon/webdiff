@@ -1,6 +1,6 @@
 import { unzlibSync } from "fflate";
 import { Debug } from "../cli/debug.ts";
-import { join } from "std/path";
+import { join } from "@std/path";
 import { readFile } from "node:fs/promises";
 import http from "node:http";
 import { exit } from "@cross/utils";

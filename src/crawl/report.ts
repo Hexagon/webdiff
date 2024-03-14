@@ -1,6 +1,6 @@
 import { exit } from "@cross/utils";
 
-import { dirname, join } from "std/path";
+import { dirname, join } from "@std/path";
 import { Asset } from "./asset.ts";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import assetQueue from "./queue.ts";

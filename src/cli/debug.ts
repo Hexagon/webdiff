@@ -1,4 +1,4 @@
-import { colors, tty } from "cliffy/ansi/mod.ts";
+import { Colors, Cursor } from "@cross/utils";
 
 class DebugSingleton {
   static _instance: DebugSingleton | null = null;
@@ -18,7 +18,7 @@ class DebugSingleton {
   }
 
   error(error: Error) {
-    console.error(colors.red(error.message));
+    console.error(Colors.red(error.message));
   }
 
   log(status: string) {
@@ -26,30 +26,21 @@ class DebugSingleton {
   }
 
   debug(args: string) {
-    if (this.verboseOutput) this.log(colors.gray(args));
+    if (this.verboseOutput) this.log(Colors.dim(args));
   }
 
   errorFeed(error: Error) {
-    tty.cursorLeft();
-    tty.cursorUp();
-    tty.eraseDown();
-    console.error(colors.red(error.message));
+    console.log(Cursor.up() + Cursor.clearLine() + Colors.red(error.message));
     console.error("");
   }
 
   logFeed(status: string) {
-    tty.cursorLeft();
-    tty.cursorUp();
-    tty.eraseDown();
-    console.log(status);
+    console.log(Cursor.up() + Cursor.clearLine() + status);
   }
 
   debugFeed(args: string) {
     if (this.verboseOutput) {
-      tty.cursorLeft();
-      tty.cursorUp();
-      tty.eraseDown();
-      this.log(colors.gray(args));
+      console.log(Cursor.up() + Cursor.clearLine() + Colors.dim(args));
       console.error("");
     }
   }
