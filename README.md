@@ -22,14 +22,13 @@ changes to their own sites or those of competitors, content managers monitoring 
 1. **Install webdiff:**
 
    ```bash
-   deno install -A -n webdiff --import-map https://raw.githubusercontent.com/hexagon/webdiff/main/import_map.json https://raw.githubusercontent.com/hexagon/webdiff/main/webdiff.ts
+   deno install -A -n webdiff jsr:@hexagon/webdiff@1.0.0-alpha.1
    ```
 
 Explanation of the flags:
 
 - `-A` grants all permissions to the program.
 - `-n webdiff` forces the installed command to be named `webdiff`.
-- `--import-map https://raw.githubusercontent.com/hexagon/webdiff/main/import_map.json` point out the import map specifying all dependencies.
 
 Optionally add `-f` to overwrite (upgrade) a previous install.
 
