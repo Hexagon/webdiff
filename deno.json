@@ -1,7 +1,7 @@
 {
   "name": "@hexagon/webdiff",
   "version": "1.0.0-alpha.1",
-  "exports": "./webdiff.js",
+  "exports": "./webdiff.ts",
   "fmt": {
     "lineWidth": 200
   },
