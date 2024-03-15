@@ -92,7 +92,6 @@ export async function crawl(targetUrl: string, resume?: boolean) {
     excludeRegex = new RegExp(settings.get("excludeUrls") as string);
     Debug.debugFeed("Ignoring assets matching regex: " + settings.get("excludeUrls"));
   }
-
   // Resume or start?
   if (resume) {
     settings.set("report", targetUrl);
@@ -116,7 +115,7 @@ export async function crawl(targetUrl: string, resume?: boolean) {
     try {
       new URL(targetUrl); // Validate each URL individually
     } catch (_error) {
-      console.error(`Error: Invalid target URL: ${targetUrl}`);
+      Debug.error(_error);
       exit(1);
     }
     report.setUrl(targetUrl);
@@ -176,7 +175,16 @@ export async function crawl(targetUrl: string, resume?: boolean) {
       });
 
       // Add to report
-      report.addAsset(asset);
+      const mimeType = asset.data_mime;
+      if (mimeFilter.length && mimeType && !mimeFilter.includes(mimeType)) {
+        Debug.debugFeed(`Skipping asset due to MIME type: ${asset.url}`);
+      } else {
+        // Conditionally save the asset to disk
+        if (!settings.get("reportOnly")) {
+          await asset.save(settings.get("output") as string);
+        }
+        report.addAsset(asset);
+      }
 
       // Save the unfinishedreport if more than x ms has passed
       const autosaveSeconds = parseInt(settings.get("autosave") || "", 10);

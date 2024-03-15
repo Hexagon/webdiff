@@ -1,4 +1,4 @@
-import { exit } from "@cross/utils";
+import { args, exit } from "@cross/utils";
 import { Settings } from "./src/cli/settings.ts";
 import { help } from "./src/cli/help.ts";
 import { diff } from "./src/diff/diff.ts";
@@ -53,6 +53,6 @@ async function main() {
 }
 
 // Using the import.meta.main idiom to specify the entry point of the executable script.
-if (import.meta.main) {
+if (import.meta.main || args().length > 0) {
   await main();
 }

@@ -30,8 +30,7 @@ class DebugSingleton {
   }
 
   errorFeed(error: Error) {
-    console.log(Cursor.up() + Cursor.clearLine() + Colors.red(error.message));
-    console.error("");
+    console.log(Cursor.up() + Cursor.clearLine() + Colors.red(`Error: ${error.message}`));
   }
 
   logFeed(status: string) {
@@ -41,7 +40,6 @@ class DebugSingleton {
   debugFeed(args: string) {
     if (this.verboseOutput) {
       console.log(Cursor.up() + Cursor.clearLine() + Colors.dim(args));
-      console.error("");
     }
   }
 }

@@ -138,3 +138,8 @@ deno.lock
 
 LOCAL.md
 local
+
+# NPM files
+package-lock.json
+.npmrc
+package.json

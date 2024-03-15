@@ -1,6 +1,5 @@
-import { exit } from "@cross/utils";
+import { args, ArgsParser, exit } from "@cross/utils";
 import { getEnv } from "@cross/env";
-import { parseArgs } from "@std/cli";
 import { userAgents } from "../crawl/user_agents.ts";
 import { Debug } from "./debug.ts";
 
@@ -19,10 +18,11 @@ type WebdiffScope = "diff" | "crawl" | "resume" | "serve" | "help";
 export class Settings {
   private static _instance: Settings; // Private static instance
   private settingsConfig: SettingConfig[] = [
-    { argName: "delay", objectName: "delay", envName: "DELAY", scope: ["crawl", "resume"], defaultValue: "100" },
+    { argName: "delay", objectName: "delay", envName: "DELAY", scope: ["crawl", "resume"], defaultValue: "500" },
     { argName: "port", objectName: "port", envName: "PORT", scope: ["serve"], defaultValue: "8080" },
     { argName: "output", objectName: "output", envName: "OUTPUT", scope: ["crawl", "resume"], defaultValue: "./" },
     { argName: "report", objectName: "report", envName: "REPORT", scope: ["crawl", "resume"], defaultValue: `report-${new Date().getTime()}.json` },
+    { argName: "report-only", objectName: "reportOnly", envName: "REPORT_ONLY", scope: ["crawl", "resume"] },
     { argName: "mime-filter", objectName: "mimeFilter", envName: "MIME_FILTER", scope: ["crawl", "resume"] },
     { argName: "user-agent", objectName: "userAgent", envName: "USER_AGENT", scope: ["crawl", "resume"], defaultValue: "webdiff" },
     { argName: "include-urls", objectName: "includeUrls", envName: "INCLUDE_URLS", scope: ["crawl", "resume"] },
@@ -77,53 +77,23 @@ export class Settings {
   }
 
   private byArgs() {
-    const parsedArgs = parseArgs(Deno.args, {
-      boolean: [
-        "verbose",
-        "help",
-        "ignore-robots",
-        "override",
-      ],
-      string: [
-        "port",
-        "delay",
-        "autosave",
-        "output",
-        "mime-filter",
-        "user-agent",
-        "include-urls",
-        "exclude-urls",
-      ],
-      alias: {
-        d: "delay",
-        p: "port",
-        o: "output",
-        a: "autosave",
-        r: "report",
-        u: "user-agent",
-        i: "ignore-robots",
-        h: "help",
-      },
-    });
+    const parsedArgs = new ArgsParser(args());
 
-    if (parsedArgs._.length >= 1) this.set("action", parsedArgs._[0].toString().toLowerCase());
-    if (parsedArgs._.length >= 2) this.set("target", parsedArgs._[1].toString());
-    if (parsedArgs._.length >= 3) this.set("targetTwo", parsedArgs._[2].toString());
+    if (parsedArgs.countLoose() >= 1) this.set("action", parsedArgs.getLoose()[0].toLowerCase());
+    if (parsedArgs.countLoose() >= 2) this.set("target", parsedArgs.getLoose()[1]);
+    if (parsedArgs.countLoose() >= 3) this.set("targetTwo", parsedArgs.getLoose()[2]);
 
     // Transfer the options
-    for (const argName in parsedArgs) {
-      // Skip special properties of the parsedArgs object and short aliases
-      if (["_", "$0"].includes(argName) || argName.length === 1 || parsedArgs[argName] === false) continue;
-
-      // Find the corresponding setting in the settingsConfig
-      const settingConfig = this.settingsConfig.find((setting) => setting.argName === argName);
-
-      if (settingConfig) {
-        this.settingsData[settingConfig.objectName] = parsedArgs[argName] as string | undefined;
-      } else {
-        // Optionally handle unknown arguments:
-        Debug.log(`Unknown command-line argument: ${argName}`);
-        exit(0);
+    for (const settingConfig of this.settingsConfig) {
+      if (parsedArgs.count(settingConfig.argName) > 1) {
+        Debug.log(`Argument '${settingConfig.argName} specified multiple times. Exiting.`);
+      } else if (parsedArgs.count(settingConfig.argName) === 1) {
+        // Find the corresponding setting in the settingsConfig
+        if (typeof parsedArgs.get(settingConfig.argName) === "boolean") {
+          this.settingsData[settingConfig.objectName] = "true";
+        } else {
+          this.settingsData[settingConfig.objectName] = parsedArgs.get(settingConfig.argName) as string | undefined;
+        }
       }
     }
   }

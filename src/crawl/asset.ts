@@ -361,9 +361,13 @@ export class Asset implements AssetData {
       throw new Error("Error saving page: No data");
     }
     const fullLocalPath = join(assetDirectory, "assets", this.hash);
-    if (await stat(fullLocalPath)) {
-      // Asset already exists
-      return;
+    try {
+      if (await stat(fullLocalPath)) {
+        // Asset already exists
+        return;
+      }
+    } catch (_e) {
+      // Ignore
     }
     if (this.ok) {
       const dirPath = dirname(fullLocalPath);

@@ -2,10 +2,17 @@
   "name": "@hexagon/webdiff",
   "version": "1.0.0-alpha.1",
   "exports": "./webdiff.js",
-
   "fmt": {
     "lineWidth": 200
   },
-
-  "importMap": "import_map.json"
+  "imports": {
+    "@cross/utils": "jsr:@cross/utils@^0.2.1",
+    "@std/path": "jsr:@std/path@0.220.1",
+    "@cross/env": "jsr:@cross/env@^0.2.5",
+    "diff": "npm:diff@5.2.0",
+    "fast-xml-parser": "npm:fast-xml-parser@4.3.5",
+    "fflate": "npm:fflate@0.8.2",
+    "linkedom": "npm:linkedom@0.16.9",
+    "mrmime": "npm:mrmime@2.0.0"
+  }
 }
