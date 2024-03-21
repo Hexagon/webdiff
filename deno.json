@@ -14,5 +14,8 @@
     "fflate": "npm:fflate@0.8.2",
     "linkedom": "npm:linkedom@0.16.9",
     "mrmime": "npm:mrmime@2.0.0"
+  },
+  "publish": {
+    "exclude": [".github"]
   }
 }
