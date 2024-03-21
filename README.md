@@ -15,7 +15,7 @@ changes to their own sites or those of competitors, content managers monitoring 
 
 ## Prerequisites
 
-- Deno ([https://deno.land/](https://deno.land/)) installed on your system.
+- Deno ([docs.deno.com/runtime/manual](https://docs.deno.com/runtime/manual#install-deno)) installed on your system.
 
 ## Getting Started
 

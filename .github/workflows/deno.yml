@@ -1,29 +1,15 @@
-name: Deno CI
+name: Testing CI
 
-on:
+on: 
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:  # Allow manual runs
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v4
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-      
-      - name: Verify formatting
-        run: deno fmt --check
-
-      - name: Run linter
-        run: deno lint
-
-      - name: Check types
-        run: deno check webdiff.ts
+  deno_ci:
+    uses: cross-org/workflows/.github/workflows/deno-ci.yml@main
+    with:
+      entrypoint: webdiff.ts
+      lint_docs: false
