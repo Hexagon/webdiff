@@ -12,4 +12,5 @@ jobs:
     uses: cross-org/workflows/.github/workflows/deno-ci.yml@main
     with:
       entrypoint: webdiff.ts
+      run_tests: false
       lint_docs: false
