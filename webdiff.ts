@@ -4,6 +4,7 @@ import { help } from "./src/cli/help.ts";
 import { diff } from "./src/diff/diff.ts";
 import { crawl } from "./src/crawl/crawl.ts";
 import { serve } from "./src/serve/serve.ts";
+import { checkJsrVersion } from "@check/self";
 
 import { Debug } from "./src/cli/debug.ts";
 
@@ -17,6 +18,15 @@ async function main() {
 
   // Extract action
   const action = settings.get("action");
+
+  // Check version
+
+  try {
+    const result = await checkJsrVersion();
+    if (!result.isUpToDate) {
+      console.warn(`Current version '${result.currentVersion}' is outdated, upgrade to '${result.latestVersion}'.`);
+    }
+  } catch (_e) { /* Ignore */ }
 
   // Handle no-ops
   if (settings.get("help") || action === "help") {
