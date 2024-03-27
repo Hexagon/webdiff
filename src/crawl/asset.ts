@@ -4,7 +4,7 @@ import { lookup } from "mrmime";
 import { XMLParser } from "fast-xml-parser";
 import { zlibSync } from "fflate";
 import { Debug } from "../cli/debug.ts";
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { exists, mkdir, writeFile } from "@cross/fs";
 
 export interface AssetData {
   url: string | undefined;
@@ -362,7 +362,7 @@ export class Asset implements AssetData {
     }
     const fullLocalPath = join(assetDirectory, "assets", this.hash);
     try {
-      if (await stat(fullLocalPath)) {
+      if (await exists(fullLocalPath)) {
         // Asset already exists
         return;
       }

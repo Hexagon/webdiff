@@ -1,6 +1,6 @@
 {
   "name": "@hexagon/webdiff",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "exports": "./webdiff.ts",
   "fmt": {
     "lineWidth": 200
@@ -8,6 +8,7 @@
   "imports": {
     "@check/self": "jsr:@check/self@^0.3.2",
     "@cross/env": "jsr:@cross/env@^1.0.0",
+    "@cross/fs": "jsr:@cross/fs@^0.0.4",
     "@cross/utils": "jsr:@cross/utils@^0.8.2",
     "@std/path": "jsr:@std/path@0.220.1",
     "diff": "npm:diff@5.2.0",

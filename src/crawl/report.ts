@@ -2,7 +2,7 @@ import { exit } from "@cross/utils";
 
 import { dirname, join } from "@std/path";
 import { Asset } from "./asset.ts";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "@cross/fs";
 import assetQueue from "./queue.ts";
 import { Debug } from "../cli/debug.ts";
 import { Settings, SettingsData } from "../cli/settings.ts";

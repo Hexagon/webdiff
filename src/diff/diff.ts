@@ -3,7 +3,7 @@ import { AssetReportData, ReportData } from "../crawl/report.ts";
 import { createTwoFilesPatch } from "diff";
 import { unzlibSync } from "fflate";
 import { join } from "@std/path";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat } from "@cross/fs";
 import { renderTable } from "../utils/table.ts";
 
 interface ChangedAssetData {
